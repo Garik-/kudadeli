@@ -7,8 +7,6 @@ import (
 
 	"kudadeli/config"
 	"kudadeli/database"
-
-	_ "modernc.org/sqlite"
 )
 
 // set from ldflags.
