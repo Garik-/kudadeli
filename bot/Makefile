@@ -38,7 +38,7 @@ test: tidy
 	@go test -v -race -count=5 ./...
 
 run: tidy
-	@go run .
+	@export $(shell xargs < .env) && go run .
 
 build: tidy
 	@echo "Building..."

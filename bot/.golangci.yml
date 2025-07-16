@@ -7,7 +7,10 @@ linters:
     - depguard
     - noinlineerr
     - paralleltest
+    - exhaustruct
   settings:
+    varnamelen:
+      min-name-length: 1
     cyclop:
       max-complexity: 13
     funlen:
