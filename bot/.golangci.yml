@@ -3,6 +3,10 @@ run:
   modules-download-mode: readonly
 linters:
   default: all
+  disable:
+    - depguard
+    - noinlineerr
+    - paralleltest
   exclusions:
     generated: lax
     presets:
@@ -14,6 +18,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - funlen
+          - cyclop
+
 formatters:
   enable:
     - gofmt
