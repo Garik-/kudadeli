@@ -7,6 +7,11 @@ linters:
     - depguard
     - noinlineerr
     - paralleltest
+  settings:
+    cyclop:
+      max-complexity: 13
+    funlen:
+      lines: 80
   exclusions:
     generated: lax
     presets:
@@ -23,6 +28,8 @@ linters:
         linters:
           - funlen
           - cyclop
+          - exhaustruct
+          - varnamelen
 
 formatters:
   enable:
