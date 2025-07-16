@@ -10,6 +10,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExpenseCRUD(t *testing.T) {
@@ -19,9 +21,8 @@ func TestExpenseCRUD(t *testing.T) {
 	defer os.Remove(tmpFile)
 
 	srv, err := database.New(ctx, tmpFile)
-	if err != nil {
-		t.Fatalf("failed to create database: %v", err)
-	}
+	require.NoError(t, err, "failed to create database")
+
 	defer srv.Close()
 
 	expense := model.Expense{
@@ -36,29 +37,18 @@ func TestExpenseCRUD(t *testing.T) {
 
 	t.Run("Insert", func(t *testing.T) {
 		err := srv.Insert(ctx, expense)
-		if err != nil {
-			t.Fatalf("insert failed: %v", err)
-		}
+		require.NoError(t, err, "insert failed")
 	})
 
 	t.Run("List and Check Insert", func(t *testing.T) {
 		items, err := srv.List(ctx)
-		if err != nil {
-			t.Fatalf("list failed: %v", err)
-		}
+		require.NoError(t, err, "list failed")
 
-		if len(items) != 1 {
-			t.Fatalf("expected 1 item, got %d", len(items))
-		}
+		require.Len(t, items, 1, "expected 1 item")
 
 		got := items[0]
-		if got.ID != expense.ID {
-			t.Errorf("ID mismatch")
-		}
-
-		if !got.Amount.Equal(expense.Amount) {
-			t.Errorf("amount mismatch")
-		}
+		assert.Equal(t, expense.ID, got.ID, "ID mismatch")
+		assert.True(t, got.Amount.Equal(expense.Amount), "amount mismatch")
 	})
 
 	t.Run("Update", func(t *testing.T) {
@@ -67,34 +57,24 @@ func TestExpenseCRUD(t *testing.T) {
 		expense.UpdatedAt = expense.UpdatedAt.Add(1 * time.Hour)
 
 		err := srv.Update(ctx, expense)
-		if err != nil {
-			t.Fatalf("update failed: %v", err)
-		}
+		require.NoError(t, err, "update failed")
 	})
 
 	t.Run("List and Check Update", func(t *testing.T) {
 		items, err := srv.List(ctx)
-		if err != nil {
-			t.Fatalf("list after update failed: %v", err)
-		}
+		require.NoError(t, err, "list after update failed")
 
-		if items[0].Description != "Updated description" {
-			t.Errorf("description not updated")
-		}
+		require.NotEmpty(t, items, "expected items after update")
+		assert.Equal(t, "Updated description", items[0].Description, "description not updated")
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		if err := srv.Delete(ctx, expense.ID); err != nil {
-			t.Fatalf("delete failed: %v", err)
-		}
+		err := srv.Delete(ctx, expense.ID)
+		require.NoError(t, err, "delete failed")
 
 		items, err := srv.List(ctx)
-		if err != nil {
-			t.Fatalf("list after delete failed: %v", err)
-		}
+		require.NoError(t, err, "list after delete failed")
 
-		if len(items) != 0 {
-			t.Errorf("expected 0 items after delete, got %d", len(items))
-		}
+		assert.Empty(t, items, "expected 0 items after delete")
 	})
 }
