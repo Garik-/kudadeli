@@ -33,6 +33,7 @@ func TestExpenseCRUD(t *testing.T) {
 		PaymentType: model.PaymentTypeCard,
 		Description: "Test expense",
 		Amount:      decimal.NewFromFloat(123.45),
+		UserID:      1,
 	}
 
 	t.Run("Insert", func(t *testing.T) {

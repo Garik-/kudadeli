@@ -11,6 +11,7 @@ import (
 	"kudadeli/bot"
 	"kudadeli/config"
 	"kudadeli/database"
+	"kudadeli/web"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -27,12 +28,29 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	telebot, err := bot.New(ctx, cfg.Token)
+	serverHTTP, err := web.New(ctx, cfg.Addr, db)
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP server: %w", err)
+	}
+
+	telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowUsers)
 	if err != nil {
 		return fmt.Errorf("telebot new: %w", err)
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		slog.InfoContext(ctx, "starting HTTP server", "address", serverHTTP.Addr)
+
+		return serverHTTP.ListenAndServe()
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+
+		return serverHTTP.Shutdown(ctx)
+	})
 
 	g.Go(func() error {
 		telebot.Start(ctx)

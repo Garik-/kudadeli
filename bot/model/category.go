@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type Category int
 
 const (
@@ -13,16 +15,20 @@ const (
 func (c Category) String() string {
 	switch c {
 	case CategoryMaterials:
-		return "Материалы"
+		return "материалы"
 	case CategoryLabor:
-		return "Работа/оплата мастерам"
+		return "работа/оплата мастерам"
 	case CategoryTools:
-		return "Инструменты"
+		return "инструменты"
 	case CategoryFurniture:
-		return "Мебель и техника"
+		return "мебель и техника"
 	case CategoryUnexpected:
-		return "Прочее/непредвиденное"
+		return "прочее/непредвиденное"
 	default:
-		return "Неизвестно"
+		return "неизвестно"
 	}
+}
+
+func (c Category) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.String())
 }

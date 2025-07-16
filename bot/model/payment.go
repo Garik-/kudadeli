@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type PaymentType int
 
 const (
@@ -10,10 +12,14 @@ const (
 func (p PaymentType) String() string {
 	switch p {
 	case PaymentTypeCash:
-		return "Наличные"
+		return "наличные"
 	case PaymentTypeCard:
-		return "Карта"
+		return "карта"
 	default:
-		return "Неизвестно"
+		return "неизвестно"
 	}
+}
+
+func (p PaymentType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
 }

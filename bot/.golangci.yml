@@ -8,6 +8,8 @@ linters:
     - noinlineerr
     - paralleltest
     - exhaustruct
+    - mnd
+    - wrapcheck
   settings:
     varnamelen:
       min-name-length: 1

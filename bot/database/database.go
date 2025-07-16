@@ -73,6 +73,7 @@ func (s *Service) Insert(ctx context.Context, expense model.Expense) error {
 		expense.Description,
 		expense.Amount.String(),
 		int(expense.PaymentType),
+		expense.UserID,
 	)
 	if err != nil {
 		return fmt.Errorf("insert expense: %w", err)
@@ -121,6 +122,7 @@ func (s *Service) List(ctx context.Context) ([]model.Expense, error) {
 			createdAt, updatedAt      string
 			amountStr                 string
 			categoryID, paymentTypeID int
+			userID                    int64
 		)
 
 		err := rows.Scan(
@@ -131,6 +133,7 @@ func (s *Service) List(ctx context.Context) ([]model.Expense, error) {
 			&expense.Description,
 			&amountStr,
 			&paymentTypeID,
+			&userID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("row scan: %w", err)
@@ -153,6 +156,8 @@ func (s *Service) List(ctx context.Context) ([]model.Expense, error) {
 		if err != nil {
 			return nil, fmt.Errorf("parse amount: %w", err)
 		}
+
+		expense.UserID = userID
 
 		expenses = append(expenses, expense)
 	}

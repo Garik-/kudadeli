@@ -3,11 +3,20 @@ package bot
 import (
 	"context"
 	"fmt"
+	"html"
+	"kudadeli/model"
 	"log/slog"
+	"slices"
 	"time"
 
 	"gopkg.in/telebot.v3"
+
+	"kudadeli/parser"
 )
+
+type Database interface {
+	Insert(ctx context.Context, expense model.Expense) error
+}
 
 type Service struct {
 	bot *telebot.Bot
@@ -26,14 +35,54 @@ const (
 2. Ключевые слова:
    - "нал" или "наличные" — наличная оплата
    - "карта" — оплата по карте
-   - "услуги", "материалы", "мебель" — категория (опционально)
+   - "услуги", "материалы", "инструменты", "мебель" — категория (опционально)
    - Остальное — описание
 
 3. Команды:
    /help — показать эту справку`
 )
 
-func New(ctx context.Context, token string) (*Service, error) {
+var errorMessages = map[error]string{ //nolint:gochecknoglobals
+	parser.ErrEmptyMessage:        "❌ Ты отправил пустое сообщение. Смотри, вот пример: `нал 1500 краска ванная`",
+	parser.ErrNotEnoughData:       "❌ Тут мало данных, но вот формат, если вдруг пригодится: `[тип_оплаты] [сумма] [категория] [описание]`", //nolint:lll
+	parser.ErrPaymentTypeNotFound: "❌ Напиши, как заплатил: `нал` или `карта`",
+	parser.ErrAmountNotFound:      "❌ Сумма указана неправильно. Напиши число, например: `1500`",
+}
+
+func getFriendlyError(err error) string {
+	if msg, ok := errorMessages[err]; ok {
+		return msg
+	}
+
+	return "❌ У меня тут ошибка какая-то выскочила. Попробуй еще разок, может, прокатит."
+}
+
+func formatExpenseHTML(e model.Expense) string {
+	return fmt.Sprintf(
+		"<b>✅ Записал:</b>\n\n"+
+			"<b>Дата</b>: %s\n"+
+			"<b>Тип</b>: %s\n"+
+			"<b>Сумма</b>: %s ₽\n"+
+			"<b>Описание</b>: %s\n"+
+			"<b>Категория</b>: %s\n",
+
+		html.EscapeString(e.CreatedAt.Format("02.01.2006 15:04")),
+		html.EscapeString(e.PaymentType.String()),
+		html.EscapeString(e.Amount.StringFixed(2)),
+		html.EscapeString(e.Description),
+		html.EscapeString(e.Category.String()),
+	)
+}
+
+func isAllow(allowUsers []int64, userID int64) bool {
+	if len(allowUsers) == 0 {
+		return true
+	}
+
+	return slices.Contains(allowUsers, userID)
+}
+
+func New(ctx context.Context, token string, database Database, allowUsers []int64) (*Service, error) {
 	slog.InfoContext(ctx, "init telebot", "token", token)
 
 	pref := telebot.Settings{
@@ -46,17 +95,43 @@ func New(ctx context.Context, token string) (*Service, error) {
 		return nil, fmt.Errorf("failed to create bot: %w", err)
 	}
 
-	bot.Handle("/help", func(c telebot.Context) error {
-		return c.Send(helpMessage)
-	})
+	helpHandler := func(c telebot.Context) error {
+		sender := c.Sender()
+		if isAllow(allowUsers, sender.ID) {
+			return c.Send(helpMessage)
+		}
 
-	bot.Handle("/start", func(c telebot.Context) error {
-		return c.Send(helpMessage)
-	})
+		slog.WarnContext(ctx, "forbidden", "sender", c.Sender())
 
-	// Пример echo-хендлера, если хочешь оставить:
+		return nil
+	}
+
+	bot.Handle("/help", helpHandler)
+	bot.Handle("/start", helpHandler)
+
 	bot.Handle(telebot.OnText, func(c telebot.Context) error {
-		return c.Send("Я пока просто повторяю: " + c.Text())
+		sender := c.Sender()
+		if !isAllow(allowUsers, sender.ID) {
+			slog.WarnContext(ctx, "forbidden", "sender", c.Sender())
+
+			return nil
+		}
+
+		expense, err := parser.Message(c.Text())
+		if err != nil {
+			return c.Send(getFriendlyError(err))
+		}
+
+		expense.UserID = sender.ID
+
+		err = database.Insert(ctx, expense)
+		if err != nil {
+			return c.Send("❌ Не получилось записать, может, еще разок попробуем?")
+		}
+
+		return c.Send(formatExpenseHTML(expense), &telebot.SendOptions{
+			ParseMode: telebot.ModeHTML,
+		})
 	})
 
 	return &Service{
