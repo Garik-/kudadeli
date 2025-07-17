@@ -42,7 +42,7 @@ func parseAllowUsers(input string) []int64 {
 		return nil
 	}
 
-	parts := strings.Fields(input)
+	parts := strings.Split(input, ",")
 	if len(parts) == 0 {
 		return nil
 	}
