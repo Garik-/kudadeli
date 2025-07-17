@@ -40,8 +40,10 @@ test: tidy
 run: tidy
 	@export $(shell xargs < .env) && go run .
 
+
 build: tidy
 	@echo "Building..."
+	@cd ../frontend && npm install && npm run build-only
 	@CGO_ENABLED=0 go build $(GO_LDFLAGS) -o $(DISTDIR)/$(APP) .
 	@for arch in $(ARCHS); do \
 		echo "Building for $$arch..."; \
