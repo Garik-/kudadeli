@@ -1,0 +1,15 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./bot/.env
+    environment:
+      KUDADELI_DATABASE: /app/data.db
+    container_name: go-bot
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./bot/data.db:/app/data.db
+    restart: unless-stopped
