@@ -1,0 +1,13 @@
+services:
+  bot:
+    image: garikdjan/kudadeli:main
+    env_file:
+      - ./.env
+    environment:
+      KUDADELI_DATABASE: /app/data.db
+    container_name: go-bot
+    ports:
+      - "39427:8080"
+    volumes:
+      - ./data.db:/app/data.db
+    restart: unless-stopped
