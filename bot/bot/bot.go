@@ -83,7 +83,6 @@ func isAllow(allowUsers []int64, userID int64) bool {
 }
 
 func New(ctx context.Context, token string, database Database, allowUsers []int64) (*Service, error) {
-	slog.InfoContext(ctx, "init telebot", "token", token != "", "allowUsers", allowUsers)
 
 	pref := telebot.Settings{
 		Token:  token,

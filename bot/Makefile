@@ -40,6 +40,9 @@ test: tidy
 run: tidy
 	@export $(shell xargs < .env) && go run .
 
+run-http: tidy
+	@export $(shell xargs < .env) && KUDADELI_ENABLE_BOT=false go run .
+
 
 build: tidy
 	@echo "Building..."

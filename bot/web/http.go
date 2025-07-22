@@ -10,6 +10,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/rs/cors"
 )
 
 const (
@@ -100,8 +102,15 @@ func expensesHandler(db Database) http.HandlerFunc {
 	}
 }
 
-func New(ctx context.Context, addr string, db Database) (*http.Server, error) {
+func New(ctx context.Context, addr string, allowedOrigins []string, db Database) (*http.Server, error) {
 	fs := http.FileServer(http.FS(publicFiles))
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
 
 	mux := http.NewServeMux()
 
@@ -109,7 +118,7 @@ func New(ctx context.Context, addr string, db Database) (*http.Server, error) {
 	srv.Handler = mux
 
 	mux.Handle("/", mainHandler(fs))
-	mux.Handle("/v1/expenses", expensesHandler(db))
+	mux.Handle("/v1/expenses", c.Handler(expensesHandler(db)))
 
 	return srv, nil
 }

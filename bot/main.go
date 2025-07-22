@@ -28,21 +28,16 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	serverHTTP, err := web.New(ctx, cfg.Addr, db)
+	slog.InfoContext(ctx, "http", "address", cfg.Addr, "allowedOrigins", cfg.AllowedOrigins)
+
+	serverHTTP, err := web.New(ctx, cfg.Addr, cfg.AllowedOrigins, db)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
-	}
-
-	telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowUsers)
-	if err != nil {
-		return fmt.Errorf("telebot new: %w", err)
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		slog.InfoContext(ctx, "starting HTTP server", "address", serverHTTP.Addr)
-
 		return serverHTTP.ListenAndServe()
 	})
 
@@ -52,18 +47,27 @@ func run(ctx context.Context, cfg *config.Config) error {
 		return serverHTTP.Shutdown(ctx)
 	})
 
-	g.Go(func() error {
-		telebot.Start(ctx)
+	slog.InfoContext(ctx, "telebot", "enabled", cfg.EnableBot, "token", cfg.Token != "", "allowUsers", cfg.AllowUsers)
 
-		return nil
-	})
+	if cfg.EnableBot {
 
-	g.Go(func() error {
-		<-ctx.Done()
-		telebot.Stop(ctx)
+		telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowUsers)
+		if err != nil {
+			return fmt.Errorf("telebot new: %w", err)
+		}
+		g.Go(func() error {
+			telebot.Start(ctx)
 
-		return nil
-	})
+			return nil
+		})
+
+		g.Go(func() error {
+			<-ctx.Done()
+			telebot.Stop(ctx)
+
+			return nil
+		})
+	}
 
 	return g.Wait() //nolint:wrapcheck
 }

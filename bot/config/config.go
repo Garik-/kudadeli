@@ -8,11 +8,13 @@ import (
 )
 
 const (
-	defaultDatabase   = "data.db"
-	defaultToken      = ""
-	defaultAllowUsers = ""
-	serviceName       = "kudadeli"
-	defaultHTTPAddr   = ":8080"
+	defaultDatabase       = "data.db"
+	defaultToken          = ""
+	defaultAllowUsers     = ""
+	serviceName           = "kudadeli"
+	defaultHTTPAddr       = ":8080"
+	defaultEnableBot      = true
+	defaultAllowedOrigins = "http://localhost:3000,http://localhost:5173"
 )
 
 type Service struct {
@@ -21,19 +23,49 @@ type Service struct {
 }
 
 type Config struct {
-	Addr       string
-	Database   string
-	Service    Service
-	LogLevel   slog.Level
-	Token      string
-	AllowUsers []int64
+	Addr           string
+	Database       string
+	Service        Service
+	LogLevel       slog.Level
+	Token          string
+	AllowUsers     []int64
+	EnableBot      bool
+	AllowedOrigins []string
 }
 
-func getEnv(key, defaultValue string) string {
+func envString(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 
+	return defaultValue
+}
+
+func envBool(key string, defaultValue bool) bool {
+	if value, exists := os.LookupEnv(key); exists {
+		parsed, err := strconv.ParseBool(value)
+		if err == nil {
+			return parsed
+		}
+	}
+	return defaultValue
+}
+
+func envStringSlice(key string, defaultValue []string, sep string) []string {
+	if value, exists := os.LookupEnv(key); exists {
+		parts := strings.Split(value, sep)
+		result := make([]string, 0, len(parts))
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				result = append(result, p)
+			}
+		}
+		if len(result) == 0 {
+			return defaultValue
+		}
+		return result
+	}
 	return defaultValue
 }
 
@@ -71,13 +103,15 @@ func New(version string) *Config {
 
 	return &Config{
 		LogLevel: slog.LevelDebug,
-		Addr:     getEnv(prefix+"ADDR", defaultHTTPAddr),
-		Database: getEnv(prefix+"DATABASE", defaultDatabase),
-		Token:    getEnv(prefix+"TOKEN", defaultToken),
+		Addr:     envString(prefix+"ADDR", defaultHTTPAddr),
+		Database: envString(prefix+"DATABASE", defaultDatabase),
+		Token:    envString(prefix+"TOKEN", defaultToken),
 		Service: Service{
 			Name:    serviceName,
 			Version: version,
 		},
-		AllowUsers: parseAllowUsers(getEnv(prefix+"USERS", defaultAllowUsers)),
+		AllowUsers:     parseAllowUsers(envString(prefix+"USERS", defaultAllowUsers)),
+		EnableBot:      envBool(prefix+"ENABLE_BOT", defaultEnableBot),
+		AllowedOrigins: envStringSlice(prefix+"ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}, ","),
 	}
 }
