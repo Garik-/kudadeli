@@ -164,9 +164,13 @@ function transformExpenses(data: ExpenseResponse[]) {
   }))
 }
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+
 onMounted(async () => {
+
+
   try {
-    const res = await fetch('http://localhost:8080/v1/expenses')
+    const res = await fetch(`${baseUrl}/v1/expenses`)
     if (!res.ok) throw new Error('Ошибка загрузки')
 
     const data = await res.json()
