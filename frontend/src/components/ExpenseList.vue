@@ -1,9 +1,9 @@
 <template>
   <div class="max-w-3xl mx-auto px-4 py-8 space-y-8">
 
-     <div className="flex gap-6 p-6 bg-gray-50 rounded-2xl  min-h-[120px]">
+     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-2xl  min-h-[120px]">
 
-      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg w-1/2">
+      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg">
         <div className="text-2xl font-extrabold leading-none">{{ totalAmount }}</div>
         <div className="text-gray-500 mb-3">Траты</div>
         <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
@@ -18,7 +18,7 @@
         </div> -->
       </div>
 
-      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg w-1/2">
+      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg">
         <div className="text-2xl font-extrabold leading-none">{{  budgetAmount }}</div>
         <div className="text-gray-500 mb-3">Бюджет</div>
         <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
@@ -70,6 +70,19 @@ interface ExpenseResponse {
   userId: number;
 }
 
+interface Item {
+      id: string;
+      title: string;
+      category: string;
+      amount:string;
+      paymentType: string;
+}
+
+interface GroupedItems {
+  date: string,
+  items: Item[]
+}
+
 const BUDGET = 3_000_000.00
 
 const selectedMonth = ref('Июль')
@@ -98,9 +111,9 @@ const categories = [
   { name: 'Остальное', amount: 4363, icon: EllipsisHorizontalIcon, bg: 'bg-gray-100 text-gray-800' },
 ]
 
-const groupedTransactions = ref([])
+const groupedTransactions = ref<GroupedItems[]>([])
 
-function formatDateToGroupLabel(dateString) {
+function formatDateToGroupLabel(dateString: string) {
   const date = new Date(dateString)
 
 
@@ -117,7 +130,7 @@ function capitalizeFirstLetter(str: string) {
   if (typeof str !== 'string' || str.length === 0) return str;
 
   // Удаляем ведущие пробелы, но запоминаем их для восстановления
-  const leadingSpaces = str.match(/^\s*/)[0];
+  const leadingSpaces = str.match(/^\s*/)?.[0] ?? '';
   const trimmed = str.trimStart();
 
   if (trimmed.length === 0) return str; // строка из одних пробелов
@@ -137,8 +150,8 @@ function formatPrice(amount: number): string {
 }
 
 
-function transformExpenses(data: ExpenseResponse[]) {
-  const map = new Map()
+function transformExpenses(data: ExpenseResponse[]): GroupedItems[] {
+  const map: Map<string, Item[]> = new Map()
 
   data.forEach(expense => {
     const groupKey = formatDateToGroupLabel(expense.createdAt)
@@ -147,7 +160,7 @@ function transformExpenses(data: ExpenseResponse[]) {
       map.set(groupKey, [])
     }
 
-    map.get(groupKey).push({
+    map.get(groupKey)!.push({
       id: expense.id,
       title: capitalizeFirstLetter(expense.description),
       category: expense.category,

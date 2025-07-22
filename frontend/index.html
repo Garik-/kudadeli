@@ -3,14 +3,29 @@
 
 <head>
   <meta charset="utf-8" />
-  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Kudadeli" />
+  <link rel="manifest" href="/site.webmanifest" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KudaDeli</title>
+  <title>Kudadeli</title>
 </head>
 
 <body>
   <div id="app"></div>
   <script type="module" src="/src/main.ts"></script>
+  <script>
+    const script = document.createElement('script');
+    script.src = "https://telegram.org/js/telegram-web-app.js?58";
+    script.onload = () => {
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+      console.log(tg.initDataUnsafe);
+    };
+    document.head.appendChild(script);
+  </script>
 </body>
 
 </html>
