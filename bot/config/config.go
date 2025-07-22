@@ -48,24 +48,30 @@ func envBool(key string, defaultValue bool) bool {
 			return parsed
 		}
 	}
+
 	return defaultValue
 }
 
 func envStringSlice(key string, defaultValue []string, sep string) []string {
 	if value, exists := os.LookupEnv(key); exists {
 		parts := strings.Split(value, sep)
+
 		result := make([]string, 0, len(parts))
+
 		for _, p := range parts {
 			p = strings.TrimSpace(p)
 			if p != "" {
 				result = append(result, p)
 			}
 		}
+
 		if len(result) == 0 {
 			return defaultValue
 		}
+
 		return result
 	}
+
 	return defaultValue
 }
 
@@ -110,8 +116,11 @@ func New(version string) *Config {
 			Name:    serviceName,
 			Version: version,
 		},
-		AllowUsers:     parseAllowUsers(envString(prefix+"USERS", defaultAllowUsers)),
-		EnableBot:      envBool(prefix+"ENABLE_BOT", defaultEnableBot),
-		AllowedOrigins: envStringSlice(prefix+"ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}, ","),
+		AllowUsers: parseAllowUsers(envString(prefix+"USERS", defaultAllowUsers)),
+		EnableBot:  envBool(prefix+"ENABLE_BOT", defaultEnableBot),
+		AllowedOrigins: envStringSlice(prefix+"ALLOWED_ORIGINS", []string{
+			"http://localhost:3000",
+			"http://localhost:5173",
+		}, ","),
 	}
 }

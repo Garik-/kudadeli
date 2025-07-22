@@ -50,11 +50,11 @@ func run(ctx context.Context, cfg *config.Config) error {
 	slog.InfoContext(ctx, "telebot", "enabled", cfg.EnableBot, "token", cfg.Token != "", "allowUsers", cfg.AllowUsers)
 
 	if cfg.EnableBot {
-
 		telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowUsers)
 		if err != nil {
 			return fmt.Errorf("telebot new: %w", err)
 		}
+
 		g.Go(func() error {
 			telebot.Start(ctx)
 
