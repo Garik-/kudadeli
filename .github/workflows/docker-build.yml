@@ -6,10 +6,12 @@ name: Container Image Build
 # documentation.
 
 on:
-  workflow_run:
-    workflows: ["Bot"]
-    types:
-      - completed
+  push:
+    branches: ["main"]
+    # Publish semver tags as releases.
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: ["main"]
 
 env:
   # github.repository as <account>/<repo>
