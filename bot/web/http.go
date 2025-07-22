@@ -4,7 +4,10 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
+	iofs "io/fs"
 	"kudadeli/model"
 	"log/slog"
 	"net"
@@ -35,7 +38,16 @@ func newServer(ctx context.Context, addr string) *http.Server {
 	}
 }
 
+func fileExists(fs embed.FS, path string) bool {
+	_, err := fs.Open(path)
+
+	return !errors.Is(err, iofs.ErrNotExist)
+}
+
 func mainHandler(fileServer http.Handler) http.HandlerFunc {
+	etagCache := make(map[string]string)
+	version := time.Now().Unix()
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -44,6 +56,26 @@ func mainHandler(fileServer http.Handler) http.HandlerFunc {
 		}
 
 		r.URL.Path = "public" + r.URL.Path
+
+		if fileExists(publicFiles, r.URL.Path) {
+			if etag, ok := etagCache[r.URL.Path]; ok {
+				w.Header().Set("ETag", etag)
+
+				if match := r.Header.Get("If-None-Match"); match == etag {
+					slog.DebugContext(r.Context(), "static file not modified")
+					w.WriteHeader(http.StatusNotModified)
+
+					return
+				}
+			} else {
+				etag := fmt.Sprintf(`W/"%s-%d"`, r.URL.Path, version)
+				w.Header().Set("ETag", etag)
+				etagCache[r.URL.Path] = etag
+			}
+
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
+
 		fileServer.ServeHTTP(w, r)
 	}
 }
@@ -60,6 +92,17 @@ func writeError(w http.ResponseWriter, err string) {
 	}); err != nil {
 		slog.Error("json encode: %w", "error", err)
 	}
+}
+
+func latestUpdatedAt(expenses []model.Expense) time.Time {
+	var latest time.Time
+	for i := range expenses {
+		if expenses[i].UpdatedAt.After(latest) {
+			latest = expenses[i].UpdatedAt
+		}
+	}
+
+	return latest
 }
 
 func expensesHandler(db Database) http.HandlerFunc {
@@ -81,6 +124,21 @@ func expensesHandler(db Database) http.HandlerFunc {
 		}
 
 		h := w.Header()
+		lastModified := latestUpdatedAt(expenses)
+
+		if !lastModified.IsZero() {
+			ifModifiedSince := r.Header.Get("If-Modified-Since")
+
+			if t, err := http.ParseTime(ifModifiedSince); err == nil && !lastModified.After(t) {
+				slog.DebugContext(ctx, "expenses not modified")
+				w.WriteHeader(http.StatusNotModified)
+
+				return
+			}
+
+			h.Set("Last-Modified", lastModified.Format(http.TimeFormat))
+		}
+
 		h.Set("Content-Type", "application/json; charset=utf-8")
 
 		w.WriteHeader(http.StatusOK)
