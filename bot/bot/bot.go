@@ -6,16 +6,20 @@ import (
 	"html"
 	"kudadeli/model"
 	"log/slog"
-	"slices"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gopkg.in/telebot.v3"
+	"gopkg.in/telebot.v3/middleware"
 
 	"kudadeli/parser"
 )
 
 type Database interface {
 	Insert(ctx context.Context, expense model.Expense) error
+	List(ctx context.Context, limit int) ([]model.Expense, error)
+	Delete(ctx context.Context, id model.ExpenseID) error
 }
 
 type Service struct {
@@ -23,7 +27,8 @@ type Service struct {
 }
 
 const (
-	pollerTimeout = 10 * time.Second
+	pollerTimeout    = 10 * time.Second
+	defaultListLimit = 10
 
 	helpMessage = `📌 Как пользоваться ботом:
 
@@ -39,7 +44,8 @@ const (
    - Остальное — описание
 
 3. Команды:
-   /help — показать эту справку`
+   /help — показать эту справку
+   /list [N] — показать последние [N] трат`
 )
 
 var errorMessages = map[error]string{ //nolint:gochecknoglobals
@@ -59,30 +65,35 @@ func getFriendlyError(err error) string {
 
 func formatExpenseHTML(e model.Expense) string {
 	return fmt.Sprintf(
-		"<b>✅ Записал:</b>\n\n"+
+		""+
 			"<b>Дата</b>: %s\n"+
 			"<b>Тип</b>: %s\n"+
 			"<b>Сумма</b>: %s ₽\n"+
 			"<b>Описание</b>: %s\n"+
-			"<b>Категория</b>: %s\n",
+			"<b>Категория</b>: %s\n"+
+			"<b>ID</b>: %s\n",
 
 		html.EscapeString(e.CreatedAt.Format("02.01.2006 15:04")),
 		html.EscapeString(e.PaymentType.String()),
 		html.EscapeString(e.Amount.StringFixed(2)),
 		html.EscapeString(e.Description),
 		html.EscapeString(e.Category.String()),
+		html.EscapeString(e.ID.String()),
 	)
 }
 
-func isAllow(allowUsers []int64, userID int64) bool {
-	if len(allowUsers) == 0 {
-		return true
+func formatExpensesHTML(e []model.Expense) string {
+	var sb strings.Builder
+
+	for i := range e {
+		sb.WriteString(formatExpenseHTML(e[i]))
+		sb.WriteString("\n\n")
 	}
 
-	return slices.Contains(allowUsers, userID)
+	return sb.String()
 }
 
-func New(ctx context.Context, token string, database Database, allowUsers []int64) (*Service, error) {
+func New(ctx context.Context, token string, database Database, allowUsers []int64) (*Service, error) { //nolint:funlen
 	pref := telebot.Settings{
 		Token:  token,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
@@ -94,26 +105,66 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 	}
 
 	helpHandler := func(c telebot.Context) error {
-		sender := c.Sender()
-		if isAllow(allowUsers, sender.ID) {
-			return c.Send(helpMessage)
+		return c.Send(helpMessage)
+	}
+
+	listHandler := func(c telebot.Context) error {
+		limit := defaultListLimit
+
+		tags := c.Args()
+
+		if len(tags) > 0 {
+			limit = parser.Integer(tags[0], defaultListLimit)
 		}
 
-		slog.WarnContext(ctx, "forbidden", "sender", c.Sender())
+		expenses, err := database.List(ctx, limit)
+		if err != nil {
+			return c.Send("❌ Не получилось получить список трат, может, еще разок попробуем?")
+		}
 
-		return nil
+		if len(expenses) == 0 {
+			return c.Send("❌ Список трат пуст.")
+		}
+
+		return c.Send("<b>📊 Список трат:</b>\n\n"+formatExpensesHTML(expenses), &telebot.SendOptions{
+			ParseMode: telebot.ModeHTML,
+		})
+	}
+
+	deleteHandler := func(c telebot.Context) error {
+		tags := c.Args()
+		if len(tags) == 0 {
+			return c.Send("❌ Укажи ID, который хочешь удалить.")
+		}
+
+		id := parser.ID(tags[0])
+		if id == uuid.Nil {
+			return c.Send("❌ Укажи ID, который хочешь удалить.")
+		}
+
+		err := database.Delete(ctx, id)
+		if err != nil {
+			return c.Send("❌ Не получилось удалить, может, еще разок попробуем?")
+		}
+
+		return c.Send("✅ Удалено.", &telebot.SendOptions{
+			ParseMode: telebot.ModeHTML,
+		})
+	}
+
+	group := bot.Group()
+
+	if len(allowUsers) > 0 {
+		group.Use(middleware.Whitelist(allowUsers...))
 	}
 
 	bot.Handle("/help", helpHandler)
 	bot.Handle("/start", helpHandler)
 
-	bot.Handle(telebot.OnText, func(c telebot.Context) error {
+	group.Handle("/list", listHandler)
+	group.Handle("/delete", deleteHandler)
+	group.Handle(telebot.OnText, func(c telebot.Context) error {
 		sender := c.Sender()
-		if !isAllow(allowUsers, sender.ID) {
-			slog.WarnContext(ctx, "forbidden", "sender", c.Sender())
-
-			return nil
-		}
 
 		expense, err := parser.Message(c.Text())
 		if err != nil {
@@ -127,7 +178,7 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 			return c.Send("❌ Не получилось записать, может, еще разок попробуем?")
 		}
 
-		return c.Send(formatExpenseHTML(expense), &telebot.SendOptions{
+		return c.Send("<b>✅ Записал:</b>\n\n"+formatExpenseHTML(expense), &telebot.SendOptions{
 			ParseMode: telebot.ModeHTML,
 		})
 	})

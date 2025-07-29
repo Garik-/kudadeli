@@ -2,6 +2,8 @@ package parser
 
 import (
 	"errors"
+	"log/slog"
+	"strconv"
 	"strings"
 	"time"
 
@@ -106,4 +108,36 @@ func Message(input string) (model.Expense, error) {
 		Description: strings.Join(descriptionWords, " "),
 		Amount:      amount,
 	}, nil
+}
+
+func Integer(input string, defaultValue int) int {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return defaultValue
+	}
+
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		return defaultValue
+	}
+
+	return num
+}
+
+func ID(input string) model.ExpenseID {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return uuid.Nil
+	}
+
+	u, err := uuid.Parse(input)
+	if err != nil {
+		slog.Error("parse UUID", "error", err)
+
+		return uuid.Nil
+	}
+
+	return u
 }

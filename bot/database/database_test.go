@@ -42,7 +42,7 @@ func TestExpenseCRUD(t *testing.T) {
 	})
 
 	t.Run("List and Check Insert", func(t *testing.T) {
-		items, err := srv.List(ctx)
+		items, err := srv.List(ctx, -1)
 		require.NoError(t, err, "list failed")
 
 		require.Len(t, items, 1, "expected 1 item")
@@ -62,7 +62,7 @@ func TestExpenseCRUD(t *testing.T) {
 	})
 
 	t.Run("List and Check Update", func(t *testing.T) {
-		items, err := srv.List(ctx)
+		items, err := srv.List(ctx, -1)
 		require.NoError(t, err, "list after update failed")
 
 		require.NotEmpty(t, items, "expected items after update")
@@ -73,7 +73,7 @@ func TestExpenseCRUD(t *testing.T) {
 		err := srv.Delete(ctx, expense.ID)
 		require.NoError(t, err, "delete failed")
 
-		items, err := srv.List(ctx)
+		items, err := srv.List(ctx, -1)
 		require.NoError(t, err, "list after delete failed")
 
 		assert.Empty(t, items, "expected 0 items after delete")

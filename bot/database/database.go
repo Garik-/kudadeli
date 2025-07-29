@@ -107,8 +107,15 @@ func (s *Service) Delete(ctx context.Context, id model.ExpenseID) error {
 	return nil
 }
 
-func (s *Service) List(ctx context.Context) ([]model.Expense, error) {
-	rows, err := s.db.QueryContext(ctx, selectExpenses)
+func (s *Service) List(ctx context.Context, limit int) ([]model.Expense, error) {
+	query := selectExpenses
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	slog.DebugContext(ctx, "list expenses", "limit", limit)
+
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("select expenses: %w", err)
 	}

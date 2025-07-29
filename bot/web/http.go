@@ -22,7 +22,7 @@ const (
 )
 
 type Database interface {
-	List(ctx context.Context) ([]model.Expense, error)
+	List(ctx context.Context, limit int) ([]model.Expense, error)
 }
 
 //go:embed public
@@ -115,7 +115,7 @@ func expensesHandler(db Database) http.HandlerFunc {
 
 		ctx := r.Context()
 
-		expenses, err := db.List(ctx)
+		expenses, err := db.List(ctx, -1) // -1 means no limit
 		if err != nil {
 			slog.ErrorContext(ctx, "db.List: %w", "error", err)
 			writeError(w, err.Error())
