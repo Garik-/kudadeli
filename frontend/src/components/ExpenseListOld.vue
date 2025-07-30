@@ -53,7 +53,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { BanknotesIcon, ShoppingBagIcon, FireIcon, TruckIcon, EllipsisHorizontalIcon } from '@heroicons/vue/24/solid'

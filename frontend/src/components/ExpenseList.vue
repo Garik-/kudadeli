@@ -1,61 +1,6 @@
-<template>
-  <div class="max-w-3xl mx-auto px-4 py-8 space-y-8">
-
-     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-2xl  min-h-[120px]">
-
-      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg">
-        <div className="text-2xl font-extrabold leading-none">{{ totalAmount }}</div>
-        <div className="text-gray-500 mb-3">Траты</div>
-        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
-
-          <div className="bg-blue-400 flex-grow"></div>
-
-          <div className="bg-indigo-300 w-6"></div>
-          <div className="bg-rose-500 w-6"></div>
-          <div className="bg-pink-500 w-6"></div>
-          <div className="bg-amber-400 w-6"></div>
-          <div className="bg-slate-400 w-6"></div>
-        </div> -->
-      </div>
-
-      <div className="flex flex-col justify-between bg-white p-6 rounded-2xl shadow-lg">
-        <div className="text-2xl font-extrabold leading-none">{{  budgetAmount }}</div>
-        <div className="text-gray-500 mb-3">Бюджет</div>
-        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
-          <div className="bg-blue-400 flex-grow"></div>
-          <div className="bg-sky-600 w-6"></div>
-          <div className="bg-teal-300 w-6"></div>
-        </div>-->
-      </div>
-    </div>
-
-
-
-    <!-- Transactions by Date -->
-    <div  v-for="group in groupedTransactions" :key="group.date" class="space-y-4">
-      <div class="text-lg font-bold">{{ group.date }}</div>
-      <div class="space-y-4">
-        <div v-for="tx in group.items" :key="tx.id" class="flex justify-between items-center">
-          <div class="flex items-center gap-4">
-            <div>
-              <div class="font-medium">{{ tx.title }}</div>
-              <div class="text-sm text-gray-500">{{ tx.category }}</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-red-600 font-medium">-{{ tx.amount }}</div>
-            <div class="text-sm text-gray-500">{{ tx.paymentType }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { BanknotesIcon, ShoppingBagIcon, FireIcon, TruckIcon, EllipsisHorizontalIcon } from '@heroicons/vue/24/solid'
 
 import { isToday, isYesterday } from 'date-fns'
 
@@ -85,9 +30,6 @@ interface GroupedItems {
 
 const BUDGET = 3_000_000.00
 
-const selectedMonth = ref('Июль')
-const months = ['Июль', 'Июнь', 'Май']
-
 
 const totalAmount = ref('')
 const budgetAmount = ref('')
@@ -102,16 +44,8 @@ function getTotalAmount(data: ExpenseResponse[]) {
   return amount
 }
 
-const categories = [
-  { name: 'Переводы', amount: 332117, icon: BanknotesIcon, bg: 'bg-blue-100 text-blue-800' },
-  { name: 'Маркетплейсы', amount: 4906, icon: ShoppingBagIcon, bg: 'bg-pink-100 text-pink-800' },
-  { name: 'Рестораны', amount: 4323, icon: FireIcon, bg: 'bg-red-100 text-red-800' },
-  { name: 'Фастфуд', amount: 3790, icon: FireIcon, bg: 'bg-yellow-100 text-yellow-800' },
-  { name: 'Такси', amount: 2813, icon: TruckIcon, bg: 'bg-yellow-200 text-yellow-900' },
-  { name: 'Остальное', amount: 4363, icon: EllipsisHorizontalIcon, bg: 'bg-gray-100 text-gray-800' },
-]
-
 const groupedTransactions = ref<GroupedItems[]>([])
+const groupedAmount = ref<Record<string, string>>({})
 
 function formatDateToGroupLabel(dateString: string) {
   const date = new Date(dateString)
@@ -149,6 +83,28 @@ function formatPrice(amount: number): string {
   return amount.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0,maximumFractionDigits: 2})
 }
 
+function transformExpensesAmount(data: ExpenseResponse[]): Record<string, string> {
+  const amounts: Record<string, number> = {}
+
+  data.forEach(expense => {
+    const groupKey = formatDateToGroupLabel(expense.createdAt)
+    const amount = parseFloat(expense.amount)
+
+    if (!amounts[groupKey]) {
+      amounts[groupKey] = 0
+    }
+
+    amounts[groupKey] += amount
+  })
+
+  // Преобразуем объект amounts в объект с отформатированными значениями
+  const formattedAmounts: Record<string, string> = {}
+  for (const key in amounts) {
+    formattedAmounts[key] = formatPrice(amounts[key]); // форматируем каждое значение
+  }
+  return formattedAmounts
+}
+
 
 function transformExpenses(data: ExpenseResponse[]): GroupedItems[] {
   const map: Map<string, Item[]> = new Map()
@@ -180,14 +136,13 @@ function transformExpenses(data: ExpenseResponse[]): GroupedItems[] {
 const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
 
 onMounted(async () => {
-
-
   try {
     const res = await fetch(`${baseUrl}/v1/expenses`)
     if (!res.ok) throw new Error('Ошибка загрузки')
 
     const data = await res.json()
     groupedTransactions.value = transformExpenses(data)
+    groupedAmount.value = transformExpensesAmount(data)
 
     const amount = getTotalAmount(data)
 
@@ -198,33 +153,73 @@ onMounted(async () => {
    // error.value = err.message
   }
 })
-
-/*
-const groupedTransactions = [
-  {
-    date: 'Вчера',
-    items: [
-      { id: 1, title: 'Пятёрочка', subtitle: 'Супермаркеты', amount: '1582,9', card: 'Дебетовая карта', logo: '/logos/pyaterochka.png' },
-      { id: 2, title: 'Пятёрочка', subtitle: 'Супермаркеты', amount: '59,99', card: 'Дебетовая карта', logo: '/logos/pyaterochka.png' },
-      { id: 3, title: 'Павел К.', subtitle: 'Переводы', amount: '120000', card: 'Black', logo: '/logos/person-yellow.png' },
-      { id: 4, title: 'Анфиса Р.', subtitle: 'Переводы', amount: '50000', card: 'Black', logo: '/logos/person-yellow.png' },
-    ],
-  },
-  {
-    date: '16 июля',
-    items: [
-      { id: 5, title: 'Яндекс Такси', subtitle: 'Такси', amount: '220', card: 'Дебетовая карта', logo: '/logos/yandex-taxi.png' },
-      { id: 6, title: 'Яндекс Такси', subtitle: 'Такси', amount: '1389', card: 'Дебетовая карта', logo: '/logos/yandex-taxi.png' },
-    ],
-  },
-  {
-    date: '15 июля',
-    items: [
-      { id: 7, title: 'Яндекс Такси', subtitle: 'Такси', amount: '1204', card: '', logo: '/logos/yandex-taxi.png' },
-    ],
-  },
-]*/
 </script>
-
 <style scoped>
+.shadow-item {
+  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 34px 0;
+}
 </style>
+<template>
+  <div class="max-w-3xl mx-auto px-4 pb-8">
+
+    <div className="sticky top-0 py-8">
+     <div className="grid  grid-cols-2 gap-4 rounded-2xl">
+
+      <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
+        <div className="font-bold text-lg">{{ totalAmount }}</div>
+        <div className="text-gray-500 text-sm">Траты</div>
+        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
+
+          <div className="bg-blue-400 flex-grow"></div>
+
+          <div className="bg-indigo-300 w-6"></div>
+          <div className="bg-rose-500 w-6"></div>
+          <div className="bg-pink-500 w-6"></div>
+          <div className="bg-amber-400 w-6"></div>
+          <div className="bg-slate-400 w-6"></div>
+        </div> -->
+      </div>
+
+      <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
+        <div className="font-bold text-lg">{{  budgetAmount }}</div>
+        <div className="text-gray-500 text-sm">Бюджет</div>
+        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
+          <div className="bg-blue-400 flex-grow"></div>
+          <div className="bg-sky-600 w-6"></div>
+          <div className="bg-teal-300 w-6"></div>
+        </div>-->
+      </div>
+    </div>
+</div>
+
+<div className="space-y-8">
+
+    <!-- Transactions by Date -->
+    <div  v-for="group in groupedTransactions" :key="group.date" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold">{{ group.date }}</div>
+        <div class="text-right text-gray-400">-{{ groupedAmount[group.date] }}</div>
+    </div>
+
+      <div class="space-y-4">
+        <div v-for="tx in group.items" :key="tx.id" class="flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <div>
+              <div class="font-medium">{{ tx.title }}</div>
+              <div class="text-sm text-gray-500">{{ tx.category }}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-red-600 font-medium">-{{ tx.amount }}</div>
+            <div class="text-sm text-gray-500">{{ tx.paymentType }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</div>
+  </div>
+</template>
+
+
+
