@@ -105,6 +105,39 @@ func latestUpdatedAt(expenses []model.Expense) time.Time {
 	return latest
 }
 
+type categoryJSON struct {
+	ID   byte   `json:"id"`
+	Name string `json:"name"`
+}
+
+func categoriesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
+			return
+		}
+
+		ctx := r.Context()
+
+		categories := model.Categories()
+
+		var jsonData = make([]categoryJSON, len(categories))
+
+		for i := range categories {
+			jsonData[i] = categoryJSON{
+				ID:   byte(categories[i]),
+				Name: categories[i].String(),
+			}
+		}
+
+		if err := json.NewEncoder(w).Encode(jsonData); err != nil {
+			slog.ErrorContext(ctx, "writeString: %w", "error", err)
+			writeError(w, err.Error())
+		}
+	}
+}
+
 func expensesHandler(db Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -177,6 +210,7 @@ func New(ctx context.Context, addr string, allowedOrigins []string, db Database)
 
 	mux.Handle("/", mainHandler(fs))
 	mux.Handle("/v1/expenses", c.Handler(expensesHandler(db)))
+	mux.Handle("/v1/categories", c.Handler(categoriesHandler()))
 
 	return srv, nil
 }

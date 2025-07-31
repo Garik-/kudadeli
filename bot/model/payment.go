@@ -2,7 +2,7 @@ package model
 
 import "encoding/json"
 
-type PaymentType int
+type PaymentType byte
 
 const (
 	PaymentTypeCash PaymentType = iota + 1 // 1

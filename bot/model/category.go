@@ -2,7 +2,7 @@ package model
 
 import "encoding/json"
 
-type Category int
+type Category byte
 
 const (
 	CategoryMaterials  Category = iota + 1 // 1
@@ -26,6 +26,16 @@ func (c Category) String() string {
 		return "прочее/непредвиденное"
 	default:
 		return "неизвестно"
+	}
+}
+
+func Categories() []Category {
+	return []Category{
+		CategoryMaterials,
+		CategoryLabor,
+		CategoryTools,
+		CategoryFurniture,
+		CategoryUnexpected,
 	}
 }
 
