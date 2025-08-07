@@ -1,6 +1,7 @@
-
 <script setup lang="ts">
+import type { Ref } from 'vue'
 import { ref, onMounted } from 'vue'
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 import { isToday, isYesterday } from 'date-fns'
 
@@ -16,11 +17,11 @@ interface ExpenseResponse {
 }
 
 interface Item {
-      id: string;
-      title: string;
-      category: string;
-      amount:string;
-      paymentType: string;
+  id: string;
+  title: string;
+  category: string;
+  amount: string;
+  paymentType: string;
 }
 
 interface GroupedItems {
@@ -28,24 +29,38 @@ interface GroupedItems {
   items: Item[]
 }
 
+class LoadingError extends Error {
+  constructor(message?: string) {
+    super(message || "Ошибка загрузки")
+    this.name = "LoadingError"
+  }
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
 const BUDGET = 3_000_000.00
 
 
 const totalAmount = ref('')
 const budgetAmount = ref('')
+const categories: Ref<Category[]> = ref([])
+const groupedTransactions = ref<GroupedItems[]>([])
+const groupedAmount = ref<Record<string, string>>({})
 
 function getTotalAmount(data: ExpenseResponse[]) {
   let amount = 0;
 
-   data.forEach(expense => {
-      amount += parseFloat(expense.amount)
-   })
+  data.forEach(expense => {
+    amount += parseFloat(expense.amount)
+  })
 
   return amount
 }
 
-const groupedTransactions = ref<GroupedItems[]>([])
-const groupedAmount = ref<Record<string, string>>({})
+
 
 function formatDateToGroupLabel(dateString: string) {
   const date = new Date(dateString)
@@ -80,7 +95,7 @@ function capitalizeFirstLetter(str: string) {
 }
 
 function formatPrice(amount: number): string {
-  return amount.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0,maximumFractionDigits: 2})
+  return amount.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
 function transformExpensesAmount(data: ExpenseResponse[]): Record<string, string> {
@@ -135,22 +150,34 @@ function transformExpenses(data: ExpenseResponse[]): GroupedItems[] {
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
 
+async function fetchExpenses() {
+  const res = await fetch(`${baseUrl}/v1/expenses`)
+  if (!res.ok) throw new LoadingError()
+
+  const data = await res.json()
+  groupedTransactions.value = transformExpenses(data)
+  groupedAmount.value = transformExpensesAmount(data)
+
+  const amount = getTotalAmount(data)
+
+  totalAmount.value = formatPrice(amount)
+  budgetAmount.value = formatPrice(BUDGET - amount)
+}
+
+async function fetchCategories() {
+  const res = await fetch(`${baseUrl}/v1/categories`)
+  if (!res.ok) throw new LoadingError()
+
+  categories.value = await res.json()
+}
+
 onMounted(async () => {
   try {
-    const res = await fetch(`${baseUrl}/v1/expenses`)
-    if (!res.ok) throw new Error('Ошибка загрузки')
-
-    const data = await res.json()
-    groupedTransactions.value = transformExpenses(data)
-    groupedAmount.value = transformExpensesAmount(data)
-
-    const amount = getTotalAmount(data)
-
-    totalAmount.value = formatPrice(amount)
-    budgetAmount.value = formatPrice(BUDGET - amount)
+    fetchExpenses();
+    fetchCategories();
   } catch (err) {
     console.error(err)
-   // error.value = err.message
+    // error.value = err.message
   }
 })
 </script>
@@ -160,15 +187,15 @@ onMounted(async () => {
 }
 </style>
 <template>
-  <div class="max-w-3xl mx-auto px-4 pb-8">
+  <div class="max-w-3xl mx-auto">
 
-    <div className="sticky top-0 py-8">
-     <div className="grid  grid-cols-2 gap-4 rounded-2xl">
+    <div className="sticky top-0 py-8 px-4">
+      <div className="grid  grid-cols-2 gap-4 rounded-2xl">
 
-      <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-        <div className="font-bold text-lg">{{ totalAmount }}</div>
-        <div className="text-gray-500 text-sm">Траты</div>
-        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
+        <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
+          <div className="font-bold text-lg">{{ totalAmount }}</div>
+          <div className="text-gray-500 text-sm">Траты</div>
+          <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
 
           <div className="bg-blue-400 flex-grow"></div>
 
@@ -178,48 +205,59 @@ onMounted(async () => {
           <div className="bg-amber-400 w-6"></div>
           <div className="bg-slate-400 w-6"></div>
         </div> -->
-      </div>
+        </div>
 
-      <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-        <div className="font-bold text-lg">{{  budgetAmount }}</div>
-        <div className="text-gray-500 text-sm">Бюджет</div>
-        <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
+        <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
+          <div className="font-bold text-lg">{{ budgetAmount }}</div>
+          <div className="text-gray-500 text-sm">Бюджет</div>
+          <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
           <div className="bg-blue-400 flex-grow"></div>
           <div className="bg-sky-600 w-6"></div>
           <div className="bg-teal-300 w-6"></div>
         </div>-->
-      </div>
-    </div>
-</div>
-
-<div className="space-y-8">
-
-    <!-- Transactions by Date -->
-    <div  v-for="group in groupedTransactions" :key="group.date" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="text-lg font-bold">{{ group.date }}</div>
-        <div class="text-right text-gray-400">-{{ groupedAmount[group.date] }}</div>
-    </div>
-
-      <div class="space-y-4">
-        <div v-for="tx in group.items" :key="tx.id" class="flex justify-between items-center">
-          <div class="flex items-center gap-4">
-            <div>
-              <div class="font-medium">{{ tx.title }}</div>
-              <div class="text-sm text-gray-500">{{ tx.category }}</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-red-600 font-medium">-{{ tx.amount }}</div>
-            <div class="text-sm text-gray-500">{{ tx.paymentType }}</div>
-          </div>
         </div>
       </div>
     </div>
 
-</div>
+    <div className="space-y-8 relative">
+
+      <!-- Transactions by Date -->
+      <div v-for="group in groupedTransactions" :key="group.date" class="space-y-2">
+        <div class="flex items-center justify-between px-4">
+          <div class="text-lg font-bold">{{ group.date }}</div>
+          <div class="text-right text-gray-400">-{{ groupedAmount[group.date] }}</div>
+        </div>
+
+        <div class="space-y-2">
+          <Menu as="div" v-for="tx in group.items" :key="tx.id">
+            <MenuButton as="div" class="flex justify-between items-center active:bg-gray-50 px-4 py-2">
+              <div class="flex items-center gap-4">
+                <div>
+                  <div class="font-medium">{{ tx.title }}</div>
+                  <div class="text-sm text-gray-500">{{ tx.category }}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-red-600 font-medium">-{{ tx.amount }}</div>
+                <div class="text-sm text-gray-500">{{ tx.paymentType }}</div>
+              </div>
+            </MenuButton>
+
+            <MenuItems
+              class="absolute left-4 mt-2 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+              <div class="px-1 py-1">
+                <MenuItem v-slot="{ active }" v-for="category in categories" :key="category.id">
+                <div>
+                  {{ category.name }}
+                </div>
+                </MenuItem>
+              </div>
+            </MenuItems>
+
+          </Menu>
+        </div>
+      </div>
+
+    </div>
   </div>
 </template>
-
-
-
