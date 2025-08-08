@@ -241,6 +241,8 @@ func New(ctx context.Context, addr string, allowedOrigins []string, db Database)
 
 	r := chi.NewRouter()
 	r.Handle("/", mainHandler(fs))
+	r.NotFound(mainHandler(fs))
+
 	r.Route("/v1", func(v1 chi.Router) {
 		v1.Use(c.Handler)
 
