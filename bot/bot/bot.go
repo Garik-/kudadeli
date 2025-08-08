@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 
@@ -29,6 +31,7 @@ type Service struct {
 const (
 	pollerTimeout    = 10 * time.Second
 	defaultListLimit = 10
+	minExpenseStrlen = 256
 
 	helpMessage = `📌 Как пользоваться ботом:
 
@@ -63,30 +66,45 @@ func getFriendlyError(err error) string {
 	return "❌ У меня тут ошибка какая-то выскочила. Попробуй еще разок, может, прокатит."
 }
 
-func formatExpenseHTML(e model.Expense) string {
-	return fmt.Sprintf(
-		""+
-			"<b>Дата</b>: %s\n"+
-			"<b>Тип</b>: %s\n"+
-			"<b>Сумма</b>: %s ₽\n"+
-			"<b>Описание</b>: %s\n"+
-			"<b>Категория</b>: %s\n"+
-			"<b>ID</b>: %s\n",
-
-		html.EscapeString(e.CreatedAt.Format("02.01.2006 15:04")),
-		html.EscapeString(e.PaymentType.String()),
-		html.EscapeString(e.Amount.StringFixed(2)),
-		html.EscapeString(e.Description),
-		html.EscapeString(e.Category.String()),
-		html.EscapeString(e.ID.String()),
-	)
-}
-
-func formatExpensesHTML(e []model.Expense) string {
+func formatExpenseHTML(p *message.Printer, e model.Expense) string {
 	var sb strings.Builder
 
-	for i := range e {
-		sb.WriteString(formatExpenseHTML(e[i]))
+	sb.Grow(minExpenseStrlen)
+
+	sb.WriteString("<b>Дата</b>: ")
+	sb.WriteString(html.EscapeString(e.CreatedAt.Format("02.01.2006 15:04")))
+	sb.WriteByte('\n')
+
+	sb.WriteString("<b>Тип</b>: ")
+	sb.WriteString(html.EscapeString(e.PaymentType.String()))
+	sb.WriteByte('\n')
+
+	sb.WriteString("<b>Сумма</b>: ")
+	sb.WriteString(html.EscapeString(p.Sprintf("%.2f", e.Amount.InexactFloat64())))
+	sb.WriteString(" ₽\n")
+
+	sb.WriteString("<b>Описание</b>: ")
+	sb.WriteString(html.EscapeString(e.Description))
+	sb.WriteByte('\n')
+
+	sb.WriteString("<b>Категория</b>: ")
+	sb.WriteString(html.EscapeString(e.Category.String()))
+	sb.WriteByte('\n')
+
+	sb.WriteString("<b>ID</b>: ")
+	sb.WriteString(html.EscapeString(e.ID.String()))
+	sb.WriteByte('\n')
+
+	return sb.String()
+}
+
+func formatExpensesHTML(p *message.Printer, expenses []model.Expense) string {
+	var sb strings.Builder
+
+	sb.Grow(len(expenses) * minExpenseStrlen)
+
+	for i := range expenses {
+		sb.WriteString(formatExpenseHTML(p, expenses[i]))
 		sb.WriteString("\n\n")
 	}
 
@@ -98,6 +116,8 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 		Token:  token,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	}
+
+	p := message.NewPrinter(language.Russian)
 
 	bot, err := telebot.NewBot(pref)
 	if err != nil {
@@ -126,7 +146,7 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 			return c.Send("❌ Список трат пуст.")
 		}
 
-		return c.Send("<b>📊 Список трат:</b>\n\n"+formatExpensesHTML(expenses), &telebot.SendOptions{
+		return c.Send("<b>📊 Список трат:</b>\n\n"+formatExpensesHTML(p, expenses), &telebot.SendOptions{
 			ParseMode: telebot.ModeHTML,
 		})
 	}
@@ -147,9 +167,7 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 			return c.Send("❌ Не получилось удалить, может, еще разок попробуем?")
 		}
 
-		return c.Send("✅ Удалено.", &telebot.SendOptions{
-			ParseMode: telebot.ModeHTML,
-		})
+		return c.Send("✅ Удалено.")
 	}
 
 	group := bot.Group()
@@ -178,7 +196,7 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 			return c.Send("❌ Не получилось записать, может, еще разок попробуем?")
 		}
 
-		return c.Send("<b>✅ Записал:</b>\n\n"+formatExpenseHTML(expense), &telebot.SendOptions{
+		return c.Send("<b>✅ Записал:</b>\n\n"+formatExpenseHTML(p, expense), &telebot.SendOptions{
 			ParseMode: telebot.ModeHTML,
 		})
 	})

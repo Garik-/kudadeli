@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -64,6 +65,26 @@ func (s *Service) Close() error {
 	return nil
 }
 
+func (s *Service) LatestUpdatedAt(ctx context.Context) (time.Time, error) {
+	var updatedAt string
+
+	err := s.db.QueryRowContext(ctx, latestUpdatedAt).Scan(&updatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return time.Time{}, nil // Нет записей
+		}
+
+		return time.Time{}, fmt.Errorf("failed to get latest updated_at: %w", err)
+	}
+
+	t, err := time.Parse(time.RFC3339, updatedAt)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse updated_at: %w", err)
+	}
+
+	return t, nil
+}
+
 func (s *Service) Insert(ctx context.Context, expense model.Expense) error {
 	_, err := s.db.ExecContext(ctx, insertExpense,
 		expense.ID.String(),
@@ -93,6 +114,19 @@ func (s *Service) Update(ctx context.Context, expense model.Expense) error {
 	)
 	if err != nil {
 		return fmt.Errorf("update expense: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) UpdateCategory(ctx context.Context, expenseID model.ExpenseID, category model.Category) error {
+	_, err := s.db.ExecContext(ctx, updateExpenseCategory,
+		time.Now().Format(time.RFC3339),
+		int(category),
+		expenseID.String(),
+	)
+	if err != nil {
+		return fmt.Errorf("update expense category: %w", err)
 	}
 
 	return nil

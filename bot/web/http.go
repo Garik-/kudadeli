@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/cors"
 )
 
@@ -23,6 +24,7 @@ const (
 
 type Database interface {
 	List(ctx context.Context, limit int) ([]model.Expense, error)
+	LatestUpdatedAt(ctx context.Context) (time.Time, error)
 }
 
 //go:embed public
@@ -111,14 +113,20 @@ type categoryJSON struct {
 }
 
 func categoriesHandler() http.HandlerFunc {
+	etag := fmt.Sprintf(`"W/%d"`, time.Now().Unix())
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		ctx := r.Context()
+
+		h := w.Header()
+		h.Set("ETag", etag)
+
+		if match := r.Header.Get("If-None-Match"); match == etag {
+			slog.DebugContext(ctx, "category not modified")
+			w.WriteHeader(http.StatusNotModified)
 
 			return
 		}
-
-		ctx := r.Context()
 
 		categories := model.Categories()
 
@@ -131,6 +139,9 @@ func categoriesHandler() http.HandlerFunc {
 			}
 		}
 
+		h.Set("Content-Type", "application/json; charset=utf-8")
+		h.Set("Cache-Control", "public, max-age=3600, must-revalidate")
+
 		if err := json.NewEncoder(w).Encode(jsonData); err != nil {
 			slog.ErrorContext(ctx, "writeString: %w", "error", err)
 			writeError(w, err.Error())
@@ -138,15 +149,52 @@ func categoriesHandler() http.HandlerFunc {
 	}
 }
 
+func updateExpenseCategoryHandler(_ Database) http.HandlerFunc {
+	return func(_ http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		slog.DebugContext(ctx, "update category handler")
+	}
+}
+
+func isNotModified(clientSince, lastModified time.Time) bool {
+	if lastModified.IsZero() {
+		return false
+	}
+
+	clientSinceUTC := clientSince.UTC()
+	lastModifiedUTC := lastModified.UTC()
+
+	return !lastModifiedUTC.After(clientSinceUTC)
+}
+
 func expensesHandler(db Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		ctx := r.Context()
+		h := w.Header()
+
+		lastModified, err := db.LatestUpdatedAt(ctx)
+		if err != nil {
+			slog.ErrorContext(ctx, "db.LatestUpdatedAt: %w", "error", err)
+			writeError(w, err.Error())
 
 			return
 		}
 
-		ctx := r.Context()
+		// Проверяем If-Modified-Since
+		ifModifiedSince := r.Header.Get("If-Modified-Since")
+		if ifModifiedSince != "" {
+			clientSince, err := http.ParseTime(ifModifiedSince)
+			if err != nil {
+				slog.ErrorContext(ctx, "failed to parse If-Modified-Since", "error", err)
+			} else if isNotModified(clientSince, lastModified) {
+				slog.DebugContext(ctx, "expenses not modified", "lastModified", lastModified, "clientSince", clientSince)
+				w.WriteHeader(http.StatusNotModified)
+
+				return
+			}
+		}
+
+		slog.DebugContext(ctx, "expenses query")
 
 		expenses, err := db.List(ctx, -1) // -1 means no limit
 		if err != nil {
@@ -156,23 +204,11 @@ func expensesHandler(db Database) http.HandlerFunc {
 			return
 		}
 
-		h := w.Header()
-		lastModified := latestUpdatedAt(expenses)
-
-		if !lastModified.IsZero() {
-			ifModifiedSince := r.Header.Get("If-Modified-Since")
-
-			if t, err := http.ParseTime(ifModifiedSince); err == nil && !lastModified.After(t) {
-				slog.DebugContext(ctx, "expenses not modified")
-				w.WriteHeader(http.StatusNotModified)
-
-				return
-			}
-
-			h.Set("Last-Modified", lastModified.Format(http.TimeFormat))
-		}
+		lastModified = latestUpdatedAt(expenses)
 
 		h.Set("Content-Type", "application/json; charset=utf-8")
+		h.Set("Cache-Control", "private, must-revalidate")
+		h.Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
 
 		w.WriteHeader(http.StatusOK)
 
@@ -203,14 +239,18 @@ func New(ctx context.Context, addr string, allowedOrigins []string, db Database)
 		AllowCredentials: true,
 	})
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Handle("/", mainHandler(fs))
+	r.Route("/v1", func(v1 chi.Router) {
+		v1.Use(c.Handler)
+
+		v1.Get("/expenses", expensesHandler(db))
+		v1.Get("/categories", categoriesHandler())
+		v1.Put("/expenses/{id}/category", updateExpenseCategoryHandler(db))
+	})
 
 	srv := newServer(ctx, addr)
-	srv.Handler = mux
-
-	mux.Handle("/", mainHandler(fs))
-	mux.Handle("/v1/expenses", c.Handler(expensesHandler(db)))
-	mux.Handle("/v1/categories", c.Handler(categoriesHandler()))
+	srv.Handler = r
 
 	return srv, nil
 }

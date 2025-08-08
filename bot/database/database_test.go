@@ -78,4 +78,7 @@ func TestExpenseCRUD(t *testing.T) {
 
 		assert.Empty(t, items, "expected 0 items after delete")
 	})
+
+	t.Log("TODO: add UpdateCategory")
+	t.Log("TODO: add LatestUpdatedAt")
 }

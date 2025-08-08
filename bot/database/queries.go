@@ -27,6 +27,12 @@ SET updated_at = ?, category_id = ?, description = ?, amount = ?, payment_type_i
 WHERE id = ?
 `
 
+	updateExpenseCategory = `
+UPDATE expenses
+SET updated_at = ?, category_id = ?
+WHERE id = ?
+`
+
 	deleteExpense = `UPDATE expenses SET deleted_at = datetime('now') WHERE id = ?`
 
 	selectExpenses = `
@@ -34,4 +40,12 @@ SELECT id, created_at, updated_at, category_id, description, amount, payment_typ
 FROM expenses WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 	`
+
+	latestUpdatedAt = `
+SELECT updated_at 
+FROM expenses 
+WHERE deleted_at IS NULL 
+ORDER BY updated_at DESC 
+LIMIT 1
+    `
 )
