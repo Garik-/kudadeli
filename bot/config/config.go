@@ -28,7 +28,7 @@ type Config struct {
 	Service        Service
 	LogLevel       slog.Level
 	Token          string
-	AllowUsers     []int64
+	AllowedUsers   []int64
 	EnableBot      bool
 	AllowedOrigins []string
 }
@@ -75,7 +75,7 @@ func envStringSlice(key string, defaultValue []string, sep string) []string {
 	return defaultValue
 }
 
-func parseAllowUsers(input string) []int64 {
+func parseAllowedUsers(input string) []int64 {
 	if input == "" {
 		return nil
 	}
@@ -116,8 +116,8 @@ func New(version string) *Config {
 			Name:    serviceName,
 			Version: version,
 		},
-		AllowUsers: parseAllowUsers(envString(prefix+"USERS", defaultAllowUsers)),
-		EnableBot:  envBool(prefix+"ENABLE_BOT", defaultEnableBot),
+		AllowedUsers: parseAllowedUsers(envString(prefix+"USERS", defaultAllowUsers)),
+		EnableBot:    envBool(prefix+"ENABLE_BOT", defaultEnableBot),
 		AllowedOrigins: envStringSlice(prefix+"ALLOWED_ORIGINS", []string{
 			"http://localhost:3000",
 			"http://localhost:5173",

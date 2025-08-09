@@ -111,7 +111,7 @@ func formatExpensesHTML(p *message.Printer, expenses model.Expenses) string {
 	return sb.String()
 }
 
-func New(ctx context.Context, token string, database Database, allowUsers []int64) (*Service, error) { //nolint:funlen
+func New(ctx context.Context, token string, database Database, allowedUsers []int64) (*Service, error) { //nolint:funlen
 	pref := telebot.Settings{
 		Token:  token,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
@@ -172,8 +172,8 @@ func New(ctx context.Context, token string, database Database, allowUsers []int6
 
 	group := bot.Group()
 
-	if len(allowUsers) > 0 {
-		group.Use(middleware.Whitelist(allowUsers...))
+	if len(allowedUsers) > 0 {
+		group.Use(middleware.Whitelist(allowedUsers...))
 	}
 
 	bot.Handle("/help", helpHandler)

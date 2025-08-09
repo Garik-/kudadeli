@@ -63,7 +63,8 @@ func isNotModified(clientSince, lastModified time.Time) bool {
 	return !lastModifiedUTC.After(clientSinceUTC)
 }
 
-func New(ctx context.Context, addr string, allowedOrigins []string, db Database) (*http.Server, error) {
+func New(ctx context.Context, db Database, addr string, allowedOrigins []string,
+	allowedUsers []int64, token string) (*http.Server, error) {
 	fs := http.FileServer(http.FS(publicFiles))
 
 	c := cors.New(cors.Options{
@@ -82,7 +83,8 @@ func New(ctx context.Context, addr string, allowedOrigins []string, db Database)
 		v1.Use(middleware.Timeout(2 * time.Second))
 
 		v1.Get("/expenses", expensesHandler(db))
-		v1.Put("/expenses/{id}/category", updateExpenseCategoryHandler(db))
+		v1.With(authMiddleware(token, allowedUsers, time.Hour)).
+			Put("/expenses/{id}/category", updateExpenseCategoryHandler(db))
 		v1.Get("/categories", categoriesHandler())
 	})
 

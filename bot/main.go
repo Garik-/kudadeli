@@ -31,7 +31,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	slog.InfoContext(ctx, "http", "address", cfg.Addr, "allowedOrigins", cfg.AllowedOrigins)
 
-	serverHTTP, err := web.New(ctx, cfg.Addr, cfg.AllowedOrigins, db)
+	serverHTTP, err := web.New(ctx, db, cfg.Addr, cfg.AllowedOrigins, cfg.AllowedUsers, cfg.Token)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
@@ -48,10 +48,10 @@ func run(ctx context.Context, cfg *config.Config) error {
 		return serverHTTP.Shutdown(ctx)
 	})
 
-	slog.InfoContext(ctx, "telebot", "enabled", cfg.EnableBot, "token", cfg.Token != "", "allowUsers", cfg.AllowUsers)
+	slog.InfoContext(ctx, "telebot", "enabled", cfg.EnableBot, "token", cfg.Token != "", "allowedUsers", cfg.AllowedUsers)
 
 	if cfg.EnableBot {
-		telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowUsers)
+		telebot, err := bot.New(ctx, cfg.Token, db, cfg.AllowedUsers)
 		if err != nil {
 			return fmt.Errorf("telebot new: %w", err)
 		}
