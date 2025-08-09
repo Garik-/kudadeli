@@ -8,10 +8,10 @@ export const useTmaStore = defineStore('tma', () => {
 
   function init() {
     try {
-      const { initDataRaw } = retrieveLaunchParams()
-      token.value = initDataRaw
+      const { initDataRaw, initData } = retrieveLaunchParams()
+      token.value = initData
 
-      console.log(initDataRaw)
+      console.log(initData, initDataRaw)
     } catch (e: unknown) {
       if (e instanceof Error) {
         console.log('tmaStore init', e.message)
