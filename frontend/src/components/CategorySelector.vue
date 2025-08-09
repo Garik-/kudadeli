@@ -76,7 +76,7 @@ onMounted(() => {
     <div class="flex flex-col min-h-screen bg-white text-black">
       <!-- Header -->
       <header class="sticky top-0 bg-white z-10 px-4 pt-4 pb-2">
-        <button @click="goBack" class="text-blue-400">
+        <button @click="goBack" class="text-blue-400 cursor-pointer w-full">
           <ArrowLeftIcon class="w-6 h-6" />
         </button>
         <h1 class="text-2xl font-bold mt-2">Изменение категории</h1>
@@ -101,7 +101,7 @@ onMounted(() => {
       <!-- Footer -->
       <footer class="sticky bottom-0 bg-gray-100 p-8 rounded-t-2xl">
         <button @click="changeCategory"
-          class="w-full bg-yellow-400 text-black py-4 rounded-2xl action:bg-yellow-300 transition">
+          class="w-full bg-yellow-400 text-black py-4 rounded-2xl action:bg-yellow-300 transition cursor-pointer">
           Поменять категорию
         </button>
       </footer>
