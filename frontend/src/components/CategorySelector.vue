@@ -43,9 +43,9 @@ function goBack() {
   router.back()
 }
 
-function changeCategory() {
+async function changeCategory() {
   try {
-    const code = updateExpenseCategory(id.value, selected.value, tmaStore.token as string)
+    const code = await updateExpenseCategory(id.value, selected.value, tmaStore.token as string)
     console.log('updateExpenseCategory', code, tmaStore.token)
   } catch (e: unknown) {
     if (e instanceof Error) {

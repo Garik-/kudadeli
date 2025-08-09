@@ -31,7 +31,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	slog.InfoContext(ctx, "http", "address", cfg.Addr, "allowedOrigins", cfg.AllowedOrigins)
 
-	serverHTTP, err := web.New(ctx, db, cfg.Addr, cfg.AllowedOrigins, cfg.AllowedUsers, cfg.Token)
+	serverHTTP, err := web.New(ctx, db, cfg.Addr, cfg.AllowedOrigins, cfg.EnableBot, cfg.AllowedUsers, cfg.Token)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
