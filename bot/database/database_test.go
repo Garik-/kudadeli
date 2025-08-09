@@ -79,6 +79,36 @@ func TestExpenseCRUD(t *testing.T) {
 		assert.Empty(t, items, "expected 0 items after delete")
 	})
 
-	t.Log("TODO: add UpdateCategory")
+	t.Run("UpdateCategory", func(t *testing.T) {
+		// Insert a new expense to update its category
+		expense := model.Expense{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now().UTC().Truncate(time.Second),
+			UpdatedAt:   time.Now().UTC().Truncate(time.Second),
+			Category:    model.CategoryMaterials,
+			PaymentType: model.PaymentTypeCard,
+			Description: "Category update test",
+			Amount:      decimal.NewFromFloat(50.00),
+			UserID:      2,
+		}
+		err := srv.Insert(ctx, expense)
+		require.NoError(t, err, "insert for UpdateCategory failed")
+
+		// Update the category
+		newCategory := model.CategoryFurniture
+		err = srv.UpdateCategory(ctx, expense.ID, newCategory)
+		require.NoError(t, err, "updateCategory failed")
+
+		// Verify the category was updated
+		items, err := srv.List(ctx, -1)
+		require.NoError(t, err, "list after UpdateCategory failed")
+		require.NotEmpty(t, items, "expected items after UpdateCategory")
+		assert.Equal(t, newCategory, items[0].Category, "category not updated")
+
+		// Clean up
+		err = srv.Delete(ctx, expense.ID)
+		require.NoError(t, err, "delete after UpdateCategory failed")
+	})
+
 	t.Log("TODO: add LatestUpdatedAt")
 }

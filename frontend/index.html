@@ -11,6 +11,8 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kudadeli</title>
+  <script src="https://telegram.org/js/telegram-web-app.js?58"></script>
+  <script type="module" src="/src/main.ts" defer></script>
   <style>
     body {
       -webkit-font-smoothing: antialiased;
@@ -45,18 +47,11 @@
 </head>
 
 <body class="antialiased">
-
   <div id="initial-loader">
     <div class="spinner"></div>
   </div>
 
   <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
-  <script>
-    const script = document.createElement('script');
-    script.src = "https://telegram.org/js/telegram-web-app.js?58";
-    document.head.appendChild(script);
-  </script>
 </body>
 
 </html>

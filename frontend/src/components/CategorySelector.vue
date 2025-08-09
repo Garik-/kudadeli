@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupOption } from '@headlessui/vue'
 import FullScreenLoader from '@/components/FullScreenLoader.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { updateExpenseCategory } from '@/services/api'
+import { useTmaStore } from '@/stories/tmaStore'
 
 
 import {
@@ -19,7 +20,7 @@ const id = ref('')
 const store = useCategoriesStore()
 const router = useRouter()
 const route = useRoute()
-
+const tmaStore = useTmaStore()
 
 function parseIDs(id: string | string[]) {
   if (Array.isArray(id)) {
@@ -44,8 +45,8 @@ function goBack() {
 
 function changeCategory() {
   try {
-    const code = updateExpenseCategory(id.value, selected.value)
-    console.log('updateExpenseCategory', code)
+    const code = updateExpenseCategory(id.value, selected.value, tmaStore.token as string)
+    console.log('updateExpenseCategory', code, tmaStore.token)
   } catch (e: unknown) {
     if (e instanceof Error) {
       console.error(e.message)

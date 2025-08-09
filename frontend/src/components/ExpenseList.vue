@@ -39,7 +39,7 @@ function selectItem(ID: string, category: string) {
   <template v-else>
     <div class="max-w-3xl mx-auto">
 
-      <div className="sticky top-0 py-8 px-4">
+      <header className="sticky top-0 py-8 px-4">
         <div className="grid  grid-cols-2 gap-4 rounded-2xl">
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
@@ -67,9 +67,10 @@ function selectItem(ID: string, category: string) {
         </div>-->
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="space-y-8 relative">
+      <main className="space-y-8 pb-4">
+
 
         <!-- Transactions by Date -->
         <div v-for="group in groupedTransactions" :key="group.date" class="space-y-2">
@@ -97,7 +98,34 @@ function selectItem(ID: string, category: string) {
           </div>
         </div>
 
-      </div>
+
+        <div v-for="group in groupedTransactions" :key="group.date" class="space-y-2">
+          <div class="flex items-center justify-between px-4">
+            <div class="text-lg font-bold">{{ group.date }}</div>
+            <div class="text-right text-gray-400">-{{ groupedAmount[group.date] }}</div>
+          </div>
+
+          <div class="space-y-2">
+            <div v-for="tx in group.items" :key="tx.id">
+              <div @click="selectItem(tx.id, tx.category)"
+                class="flex justify-between items-center active:bg-gray-50 px-4 py-2 cursor-pointer">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <div class="font-medium">{{ tx.title }}</div>
+                    <div class="text-sm text-gray-500">{{ tx.category }}</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-red-600 font-medium">-{{ tx.amount }}</div>
+                  <div class="text-sm text-gray-500">{{ tx.paymentType }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </main>
     </div>
   </template>
 </template>

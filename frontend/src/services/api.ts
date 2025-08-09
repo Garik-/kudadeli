@@ -1,7 +1,6 @@
 import axios from 'axios'
 import type { Expense } from '@/models/expense'
 import type { Category } from '@/models/category'
-import { retrieveLaunchParams } from '@telegram-apps/sdk'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
@@ -15,22 +14,16 @@ export async function fetchCategories() {
   return response.data
 }
 
-function authorizationHeader() {
-  try {
-    const { initDataRaw } = retrieveLaunchParams()
+function authorizationHeader(token?: string) {
+  if (token)
     return {
-      Authorization: `tma ${initDataRaw}`,
+      Authorization: `tma ${token}`,
     }
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error(e.message)
-    }
-  }
 
   return {}
 }
 
-export async function updateExpenseCategory(expenseId: string, category: number) {
+export async function updateExpenseCategory(expenseId: string, category: number, token?: string) {
   const response = await axios.put(
     `${API_BASE_URL}/v1/expenses/${expenseId}/category`,
     {
@@ -38,7 +31,7 @@ export async function updateExpenseCategory(expenseId: string, category: number)
     },
     {
       validateStatus: (status) => status === 204 || status === 403,
-      headers: authorizationHeader(),
+      headers: authorizationHeader(token),
     },
   )
 
