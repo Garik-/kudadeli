@@ -6,6 +6,8 @@ services:
     environment:
       KUDADELI_DATABASE: /app/data.db
     container_name: go-bot
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     ports:
       - "39427:8080"
     volumes:
