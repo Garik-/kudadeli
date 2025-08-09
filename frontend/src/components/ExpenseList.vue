@@ -4,8 +4,10 @@ import FullScreenLoader from '@/components/FullScreenLoader.vue'
 import { useExpenses } from '@/composables/useExpenses'
 
 import { useCategoriesStore } from '@/stories/categoriesStore';
+import { useRouter } from 'vue-router';
 
 const store = useCategoriesStore()
+const router = useRouter()
 
 
 const { groupedTransactions,
@@ -19,7 +21,7 @@ onMounted(() => {
 })
 
 function selectItem(ID: string, category: string) {
-  window.location.hash = encodeURIComponent(ID + ':' + store.getIdByName(category))
+  router.push({ name: 'edit-category', params: { id: ID + ':' + store.getIdByName(category) } })
 }
 </script>
 

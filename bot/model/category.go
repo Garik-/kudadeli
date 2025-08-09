@@ -1,6 +1,8 @@
 package model
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type Category byte
 
@@ -26,6 +28,20 @@ func (c Category) String() string {
 		return "прочее/непредвиденное"
 	default:
 		return "неизвестно"
+	}
+}
+
+func (c Category) IsValid() bool {
+	switch c {
+	case CategoryMaterials,
+		CategoryLabor,
+		CategoryTools,
+		CategoryFurniture,
+		CategoryUnexpected:
+		return true
+
+	default:
+		return false
 	}
 }
 

@@ -141,7 +141,7 @@ func (s *Service) Delete(ctx context.Context, id model.ExpenseID) error {
 	return nil
 }
 
-func (s *Service) List(ctx context.Context, limit int) ([]model.Expense, error) {
+func (s *Service) List(ctx context.Context, limit int) (model.Expenses, error) {
 	query := selectExpenses
 	if limit > 0 {
 		query += fmt.Sprintf(" LIMIT %d", limit)
@@ -155,7 +155,7 @@ func (s *Service) List(ctx context.Context, limit int) ([]model.Expense, error) 
 	}
 	defer rows.Close()
 
-	var expenses []model.Expense
+	var expenses model.Expenses
 
 	for rows.Next() {
 		var (

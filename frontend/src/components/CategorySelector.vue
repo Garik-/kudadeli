@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { RadioGroup, RadioGroupOption } from '@headlessui/vue'
 import FullScreenLoader from '@/components/FullScreenLoader.vue'
+import { useRouter, useRoute } from 'vue-router'
+import { updateExpenseCategory } from '@/services/api'
 
 
 import {
@@ -11,29 +13,58 @@ import {
 
 import { useCategoriesStore } from '@/stories/categoriesStore'
 
-
-
-
 const selected = ref(0)
 const id = ref('')
 
 const store = useCategoriesStore()
+const router = useRouter()
+const route = useRoute()
+
+
+function parseIDs(id: string | string[]) {
+  if (Array.isArray(id)) {
+    throw new Error('Unexpected array of IDs')
+  }
+
+  const parts = id.split(':')
+  if (parts.length !== 2) {
+    throw new Error('Invalid ID format. Expected "id:category"')
+  }
+
+  return {
+    id: parts[0],
+    category: parseInt(parts[1])
+  }
+}
 
 
 function goBack() {
-  window.history.back()
+  router.back()
 }
 
 function changeCategory() {
-  console.log(selected.value)
+  try {
+    const code = updateExpenseCategory(id.value, selected.value)
+    console.log('updateExpenseCategory', code)
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      console.error(e.message)
+    } else {
+      console.error('Unknown error', e)
+    }
+  } finally {
+    goBack()
+  }
 }
 
 onMounted(() => {
   store.loadCategories()
 
-  const [itemID, itemCategoryID] = decodeURIComponent(window.location.hash.substring(1)).split(":");
-  id.value = itemID
-  selected.value = parseInt(itemCategoryID)
+  const params = parseIDs(route.params.id)
+  id.value = params.id
+  selected.value = params.category
+
+  console.log(params);
 })
 
 </script>

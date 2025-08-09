@@ -20,7 +20,7 @@ import (
 
 type Database interface {
 	Insert(ctx context.Context, expense model.Expense) error
-	List(ctx context.Context, limit int) ([]model.Expense, error)
+	List(ctx context.Context, limit int) (model.Expenses, error)
 	Delete(ctx context.Context, id model.ExpenseID) error
 }
 
@@ -98,7 +98,7 @@ func formatExpenseHTML(p *message.Printer, e model.Expense) string {
 	return sb.String()
 }
 
-func formatExpensesHTML(p *message.Printer, expenses []model.Expense) string {
+func formatExpensesHTML(p *message.Printer, expenses model.Expenses) string {
 	var sb strings.Builder
 
 	sb.Grow(len(expenses) * minExpenseStrlen)
