@@ -4,9 +4,9 @@ import { useCategoriesStore } from '@/stories/categoriesStore';
 import { RouterView } from 'vue-router';
 import { useTmaStore } from './stories/tmaStore';
 
-const store = useCategoriesStore()
+const categoriesStore = useCategoriesStore()
 const tmaStore = useTmaStore()
-const loading = computed(() => store.loading)
+const loading = computed(() => categoriesStore.loading)
 
 const initialLoader = document.getElementById('initial-loader')
 if (initialLoader) {
@@ -19,7 +19,7 @@ if (initialLoader) {
 
 onMounted(() => {
   tmaStore.init();
-  store.loadCategories()
+  categoriesStore.loadCategories()
 })
 
 

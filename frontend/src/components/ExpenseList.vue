@@ -1,23 +1,17 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import FullScreenLoader from '@/components/FullScreenLoader.vue'
-import { useExpenses } from '@/composables/useExpenses'
+import { useExpensesStore } from '@/stories/expensesStore'
 
 import { useCategoriesStore } from '@/stories/categoriesStore';
 import { useRouter } from 'vue-router';
 
 const store = useCategoriesStore()
 const router = useRouter()
-
-
-const { groupedTransactions,
-  groupedAmount,
-  totalAmount,
-  budgetAmount,
-  loading, loadExpenses } = useExpenses()
+const expensesStore = useExpensesStore()
 
 onMounted(() => {
-  loadExpenses()
+  expensesStore.loadExpenses()
 })
 
 function selectItem(ID: string, category: string) {
@@ -34,7 +28,7 @@ function selectItem(ID: string, category: string) {
 
 <template>
 
-  <FullScreenLoader v-if="loading"></FullScreenLoader>
+  <FullScreenLoader v-if="expensesStore.loading"></FullScreenLoader>
 
   <template v-else>
     <div class="max-w-3xl mx-auto">
@@ -43,7 +37,7 @@ function selectItem(ID: string, category: string) {
         <div className="grid  grid-cols-2 gap-4 rounded-2xl">
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-            <div className="font-bold text-lg">{{ totalAmount }}</div>
+            <div className="font-bold text-lg">{{ expensesStore.totalAmount }}</div>
             <div className="text-gray-500 text-sm">Траты</div>
             <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
 
@@ -58,7 +52,7 @@ function selectItem(ID: string, category: string) {
           </div>
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-            <div className="font-bold text-lg">{{ budgetAmount }}</div>
+            <div className="font-bold text-lg">{{ expensesStore.budgetAmount }}</div>
             <div className="text-gray-500 text-sm">Бюджет</div>
             <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
           <div className="bg-blue-400 flex-grow"></div>
@@ -73,10 +67,10 @@ function selectItem(ID: string, category: string) {
 
 
         <!-- Transactions by Date -->
-        <div v-for="group in groupedTransactions" :key="group.date" class="space-y-2">
+        <div v-for="group in expensesStore.groupedTransactions" :key="group.date" class="space-y-2">
           <div class="flex items-center justify-between px-4">
             <div class="text-lg font-bold">{{ group.date }}</div>
-            <div class="text-right text-gray-400">-{{ groupedAmount[group.date] }}</div>
+            <div class="text-right text-gray-400">-{{ expensesStore.groupedAmount[group.date] }}</div>
           </div>
 
           <div class="space-y-2">

@@ -5,6 +5,8 @@ import FullScreenLoader from '@/components/FullScreenLoader.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { updateExpenseCategory } from '@/services/api'
 import { useTmaStore } from '@/stories/tmaStore'
+import { HttpStatusCode } from 'axios'
+import { useExpensesStore } from '@/stories/expensesStore'
 
 
 import {
@@ -21,6 +23,7 @@ const store = useCategoriesStore()
 const router = useRouter()
 const route = useRoute()
 const tmaStore = useTmaStore()
+const expensesStore = useExpensesStore()
 
 function parseIDs(id: string | string[]) {
   if (Array.isArray(id)) {
@@ -47,6 +50,10 @@ async function changeCategory() {
   try {
     const code = await updateExpenseCategory(id.value, selected.value, tmaStore.token as string)
     console.log('updateExpenseCategory', code, tmaStore.token)
+
+    if (code === HttpStatusCode.NoContent) {
+      expensesStore.needUpdate()
+    }
   } catch (e: unknown) {
     if (e instanceof Error) {
       console.error(e.message)
@@ -59,8 +66,6 @@ async function changeCategory() {
 }
 
 onMounted(() => {
-  store.loadCategories()
-
   const params = parseIDs(route.params.id)
   id.value = params.id
   selected.value = params.category

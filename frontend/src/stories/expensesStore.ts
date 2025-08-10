@@ -3,6 +3,7 @@ import type { Expense } from '@/models/expense'
 import { isToday, isYesterday } from 'date-fns'
 import { fetchExpenses } from '@/services/api'
 import { formatPrice, capitalizeFirstLetter } from '@/utils/formatter'
+import { defineStore } from 'pinia'
 
 const BUDGET = 3_000_000.0
 
@@ -21,7 +22,8 @@ export interface GroupedItems {
 
 export type GroupedAmount = Record<string, string>
 
-export function useExpenses() {
+export const useExpensesStore = defineStore('expenses', () => {
+  const update = ref(true)
   const groupedTransactions = ref<GroupedItems[]>([])
   const groupedAmount = ref<GroupedAmount>({})
 
@@ -32,6 +34,11 @@ export function useExpenses() {
   const error = ref<string | null>(null)
 
   async function loadExpenses() {
+    if (!update.value) {
+      console.log('skip loadExpenses')
+      return
+    }
+
     loading.value = true
     error.value = null
     try {
@@ -52,7 +59,12 @@ export function useExpenses() {
       }
     } finally {
       loading.value = false
+      update.value = false
     }
+  }
+
+  function needUpdate() {
+    update.value = true
   }
 
   return {
@@ -63,8 +75,9 @@ export function useExpenses() {
     loading,
     error,
     loadExpenses,
+    needUpdate,
   }
-}
+})
 
 function getTotalAmount(data: Expense[]) {
   let amount = 0
