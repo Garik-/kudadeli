@@ -7,6 +7,10 @@ export function formatPrice(amount: number): string {
   })
 }
 
+export function formatPercent(n: number): string {
+  return n.toFixed(2) + '%'
+}
+
 export function capitalizeFirstLetter(str: string) {
   if (typeof str !== 'string' || str.length === 0) return str
 

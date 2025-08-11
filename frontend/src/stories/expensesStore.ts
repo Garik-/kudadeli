@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import type { Expense } from '@/models/expense'
 import { isToday, isYesterday } from 'date-fns'
 import { fetchExpenses } from '@/services/api'
-import { formatPrice, capitalizeFirstLetter } from '@/utils/formatter'
+import { formatPrice, capitalizeFirstLetter, formatPercent } from '@/utils/formatter'
 import { defineStore } from 'pinia'
 
 const BUDGET = 3_000_000.0
@@ -29,6 +29,7 @@ export const useExpensesStore = defineStore('expenses', () => {
 
   const totalAmount = ref('')
   const budgetAmount = ref('')
+  const budgetPercent = ref('')
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -50,6 +51,7 @@ export const useExpensesStore = defineStore('expenses', () => {
 
       totalAmount.value = formatPrice(amount)
       budgetAmount.value = formatPrice(BUDGET - amount)
+      budgetPercent.value = formatPercent(100 - (amount / BUDGET) * 100)
     } catch (e: unknown) {
       if (e instanceof Error) {
         error.value = e.message || 'Ошибка загрузки'
@@ -72,6 +74,7 @@ export const useExpensesStore = defineStore('expenses', () => {
     groupedAmount,
     totalAmount,
     budgetAmount,
+    budgetPercent,
     loading,
     error,
     loadExpenses,

@@ -53,12 +53,10 @@ function selectItem(ID: string, category: string) {
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
             <div className="font-bold text-lg">{{ expensesStore.budgetAmount }}</div>
-            <div className="text-gray-500 text-sm">Бюджет</div>
-            <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
-          <div className="bg-blue-400 flex-grow"></div>
-          <div className="bg-sky-600 w-6"></div>
-          <div className="bg-teal-300 w-6"></div>
-        </div>-->
+            <div className="text-gray-500 text-sm mb-4">Бюджет</div>
+            <div className="flex h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+              <div className="bg-blue-400 rounded-full" :style="{ width: expensesStore.budgetPercent }"></div>
+            </div>
           </div>
         </div>
       </header>
