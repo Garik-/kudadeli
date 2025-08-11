@@ -38,17 +38,13 @@ function selectItem(ID: string, category: string) {
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
             <div className="font-bold text-lg">{{ expensesStore.totalAmount }}</div>
-            <div className="text-gray-500 text-sm">Траты</div>
-            <!--<div className="flex h-4 w-full rounded-full overflow-hidden">
+            <div className="text-gray-500 text-sm mb-4">Траты</div>
 
-          <div className="bg-blue-400 flex-grow"></div>
-
-          <div className="bg-indigo-300 w-6"></div>
-          <div className="bg-rose-500 w-6"></div>
-          <div className="bg-pink-500 w-6"></div>
-          <div className="bg-amber-400 w-6"></div>
-          <div className="bg-slate-400 w-6"></div>
-        </div> -->
+            <div className="flex h-3 w-full rounded-full overflow-hidden">
+              <div v-for="group in expensesStore.groupedByCategory" :key="group.amount" :class="group.color"
+                :style="{ width: group.percent }">
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
