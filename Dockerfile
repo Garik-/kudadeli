@@ -6,7 +6,7 @@ RUN npm ci
 COPY ./frontend ./
 RUN npm run build-only
 
-FROM golang:1.25-alpine AS backend
+FROM golang:1.25-rc-alpine AS backend
 
 WORKDIR /app
 
