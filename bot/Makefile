@@ -7,7 +7,7 @@ GO_LDFLAGS := -ldflags="-w -s -X 'main.Version=$(VERSION)'"
 BINDIR := $(CURDIR)/bin
 DISTDIR := $(CURDIR)/dist
 
-LINT_VERSION ?= v2.2.2
+LINT_VERSION ?= v2.3.1
 LINT_BIN := $(BINDIR)/golangci-lint
 
 APP := kudadeli
@@ -38,7 +38,7 @@ test: tidy
 	@go test -v -race -count=5 ./...
 
 run: tidy
-	@export $(shell xargs < .env) && go run .
+	@export $(shell xargs < .env) && GOEXPERIMENT=jsonv2 go run .
 
 run-http: tidy
 	@export $(shell xargs < .env) && KUDADELI_ENABLE_BOT=false go run .
@@ -47,9 +47,9 @@ run-http: tidy
 build: tidy
 	@echo "Building..."
 	@cd ../frontend && npm ci && npm run build-only
-	@CGO_ENABLED=0 go build $(GO_LDFLAGS) -o $(DISTDIR)/$(APP) .
+	@CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build $(GO_LDFLAGS) -o $(DISTDIR)/$(APP) .
 	@for arch in $(ARCHS); do \
 		echo "Building for $$arch..."; \
-		CGO_ENABLED=0 GOOS=linux GOARCH=$$arch go build $(GO_LDFLAGS) -o $(DISTDIR)/$(APP)-$$arch .; \
+		CGO_ENABLED=0 GOEXPERIMENT=jsonv2 GOOS=linux GOARCH=$$arch go build $(GO_LDFLAGS) -o $(DISTDIR)/$(APP)-$$arch .; \
 	done
 	@ls -lh $(DISTDIR)

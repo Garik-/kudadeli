@@ -18,8 +18,8 @@ defaults:
     working-directory: ./bot
 
 env:
-  GO_VERSION: 1.24.6
-  LINT_VERSION: v2.2.2
+  GO_VERSION: 1.25
+  LINT_VERSION: v2.3.1
 
 jobs:
   test_job:

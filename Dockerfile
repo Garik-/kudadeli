@@ -6,7 +6,7 @@ RUN npm ci
 COPY ./frontend ./
 RUN npm run build-only
 
-FROM golang:1.24-alpine AS backend
+FROM golang:1.25-alpine AS backend
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN go mod download
 COPY ./bot ./
 COPY --from=frontend /bot/web/public ./web/public
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server main.go
+RUN CGO_ENABLED=0 GOEXPERIMENT=jsonv2 GOOS=linux go build -ldflags="-w -s" -o server main.go
 
 FROM scratch
 

@@ -13,7 +13,6 @@ import (
 	"kudadeli/database"
 	"kudadeli/web"
 
-	_ "go.uber.org/automaxprocs"
 	"golang.org/x/sync/errgroup"
 )
 
