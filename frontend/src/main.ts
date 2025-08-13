@@ -5,13 +5,16 @@ import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ExpenseList from '@/components/ExpenseList.vue'
-import CategorySelector from './components/CategorySelector.vue'
 
 import App from './App.vue'
 
 const routes = [
   { path: '/', component: ExpenseList },
-  { path: '/expenses/:id/category', name: 'edit-category', component: CategorySelector },
+  {
+    path: '/expenses/:id/category',
+    name: 'edit-category',
+    component: () => import('./components/CategorySelector.vue'),
+  },
 ]
 
 const router = createRouter({
