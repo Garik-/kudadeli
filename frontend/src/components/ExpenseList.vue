@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import FullScreenLoader from '@/components/FullScreenLoader.vue'
 import { useExpensesStore } from '@/stories/expensesStore'
 
@@ -8,11 +8,22 @@ import { useRouter } from 'vue-router';
 import TotalAmountSmall from './TotalAmountSmall.vue';
 import BudgetAmountSmall from './BudgetAmountSmall.vue';
 
-import { XMarkIcon } from '@heroicons/vue/16/solid'
+
+import FilterButton from './FilterButton.vue';
 
 const store = useCategoriesStore()
 const router = useRouter()
 const expensesStore = useExpensesStore()
+
+const isCart = ref(false)
+
+function handleFilterChange() {
+  if (isCart.value) {
+    expensesStore.setFilter('paymentType', 'карта')
+  } else {
+    expensesStore.removeFilter('paymentType')
+  }
+}
 
 onMounted(() => {
   expensesStore.loadExpenses()
@@ -28,16 +39,6 @@ function selectItem(ID: string, category: string) {
 .shadow-item {
   box-shadow: rgba(0, 0, 0, 0.12) 0 6px 34px 0;
 }
-
-.filter-active {
-  padding-left: 12px;
-  padding-right: 6px;
-}
-
-.filter {
-  padding-left: 12px;
-  padding-right: 12px;
-}
 </style>
 
 <template>
@@ -50,13 +51,7 @@ function selectItem(ID: string, category: string) {
       <header className="sticky top-0 py-8 px-4">
         <!-- Filters -->
         <div class="flex flex-wrap gap-2 mb-6">
-          <button
-            class="filter-active inline-flex items-center justify-between gap-1 py-2 rounded-2xl bg-blue-500 text-white text-sm font-semibold cursor-pointer"><span>Black</span>
-            <XMarkIcon class="w-[1.5em] h-[1.5em]" />
-
-          </button>
-          <button class="filter py-2 rounded-2xl bg-gray-100 text-gray-700 text-sm font-bold cursor-pointer">Без
-            переводов</button>
+          <FilterButton label="Картой" v-model="isCart" @change="handleFilterChange" />
         </div>
         <div className="grid  grid-cols-2 gap-6 rounded-2xl">
 
