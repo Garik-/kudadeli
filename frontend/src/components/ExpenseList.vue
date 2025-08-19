@@ -5,6 +5,8 @@ import { useExpensesStore } from '@/stories/expensesStore'
 
 import { useCategoriesStore } from '@/stories/categoriesStore';
 import { useRouter } from 'vue-router';
+import TotalAmountSmall from './TotalAmountSmall.vue';
+import BudgetAmountSmall from './BudgetAmountSmall.vue';
 
 const store = useCategoriesStore()
 const router = useRouter()
@@ -36,24 +38,8 @@ function selectItem(ID: string, category: string) {
       <header className="sticky top-0 py-8 px-4">
         <div className="grid  grid-cols-2 gap-4 rounded-2xl">
 
-          <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-            <div className="font-bold text-lg">{{ expensesStore.totalAmount }}</div>
-            <div className="text-gray-500 text-sm mb-4">Траты</div>
-
-            <div className="flex h-3 w-full rounded-full overflow-hidden">
-              <div v-for="group in expensesStore.groupedByCategory" :key="group.amount" :class="group.color"
-                :style="{ width: group.percent }">
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col bg-white p-6 rounded-2xl shadow-item">
-            <div className="font-bold text-lg">{{ expensesStore.budgetAmount }}</div>
-            <div className="text-gray-500 text-sm mb-4">Бюджет</div>
-            <div className="flex h-3 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="bg-blue-400 rounded-full" :style="{ width: expensesStore.budgetPercent }"></div>
-            </div>
-          </div>
+          <TotalAmountSmall />
+          <BudgetAmountSmall />
         </div>
       </header>
 

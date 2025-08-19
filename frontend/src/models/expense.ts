@@ -8,3 +8,13 @@ export interface Expense {
   amount: string
   userId: number
 }
+
+export function getTotalAmount(data: Expense[]) {
+  let amount = 0
+
+  data.forEach((expense) => {
+    amount += parseFloat(expense.amount)
+  })
+
+  return amount
+}

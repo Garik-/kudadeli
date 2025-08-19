@@ -1,11 +1,10 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Expense } from '@/models/expense'
+
 import { isToday, isYesterday } from 'date-fns'
 import { fetchExpenses } from '@/services/api'
-import { formatPrice, capitalizeFirstLetter, formatPercent } from '@/utils/formatter'
+import { formatPrice, capitalizeFirstLetter } from '@/utils/formatter'
 import { defineStore } from 'pinia'
-
-const BUDGET = 3_000_000.0
 
 export interface Item {
   id: string
@@ -20,27 +19,44 @@ export interface GroupedItems {
   items: Item[]
 }
 
-export interface ExpenseByCategory {
-  amount: number
-  amountFormatted: string
-  color: string
-  percent: string
-}
-
 export type GroupedAmount = Record<string, string>
 
 export const useExpensesStore = defineStore('expenses', () => {
   const update = ref(true)
-  const groupedTransactions = ref<GroupedItems[]>([])
-  const groupedAmount = ref<GroupedAmount>({})
-  const groupedByCategory = ref<ExpenseByCategory[]>([])
 
-  const totalAmount = ref('')
-  const budgetAmount = ref('')
-  const budgetPercent = ref('')
+  const expenses = ref<Expense[]>([])
+  const filter = ref<Partial<Expense>>({})
+
+  const filteredExpenses = computed(() => {
+    return expenses.value.filter((expense) => {
+      return Object.entries(filter.value).every(([key, value]) => {
+        if (!value) return true // если фильтр по этому полю не задан
+        return String(expense[key as keyof Expense]) === String(value)
+      })
+    })
+  })
+
+  const groupedTransactions = computed(() => transformExpenses(filteredExpenses.value))
+  const groupedAmount = computed(() => transformExpensesAmount(filteredExpenses.value))
 
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  function setFilter<K extends keyof Expense>(key: K, value: Expense[K] | null) {
+    if (value == null || value === '') {
+      delete filter.value[key]
+    } else {
+      filter.value[key] = value
+    }
+  }
+
+  function removeFilter<K extends keyof Expense>(key: K) {
+    delete filter.value[key]
+  }
+
+  function clearFilter() {
+    filter.value = {}
+  }
 
   async function loadExpenses() {
     if (!update.value) {
@@ -51,16 +67,7 @@ export const useExpensesStore = defineStore('expenses', () => {
     loading.value = true
     error.value = null
     try {
-      const data = await fetchExpenses()
-      groupedTransactions.value = transformExpenses(data)
-      groupedAmount.value = transformExpensesAmount(data)
-      groupedByCategory.value = transformExpensesByCategory(data)
-
-      const amount = getTotalAmount(data)
-
-      totalAmount.value = formatPrice(amount)
-      budgetAmount.value = formatPrice(BUDGET - amount)
-      budgetPercent.value = formatPercent(100 - (amount / BUDGET) * 100)
+      expenses.value = await fetchExpenses()
     } catch (e: unknown) {
       if (e instanceof Error) {
         error.value = e.message || 'Ошибка загрузки'
@@ -81,63 +88,17 @@ export const useExpensesStore = defineStore('expenses', () => {
   return {
     groupedTransactions,
     groupedAmount,
-    groupedByCategory,
-    totalAmount,
-    budgetAmount,
-    budgetPercent,
+    expenses,
     loading,
     error,
     loadExpenses,
     needUpdate,
+    filteredExpenses,
+    setFilter,
+    removeFilter,
+    clearFilter,
   }
 })
-
-function getTotalAmount(data: Expense[]) {
-  let amount = 0
-
-  data.forEach((expense) => {
-    amount += parseFloat(expense.amount)
-  })
-
-  return amount
-}
-
-function transformExpensesByCategory(data: Expense[]): ExpenseByCategory[] {
-  const c: Record<string, number> = {}
-  let total = 0
-
-  data.forEach((expense) => {
-    const amount = parseFloat(expense.amount)
-    total += amount
-
-    if (!(expense.category in c)) {
-      c[expense.category] = amount
-    } else {
-      c[expense.category] += amount
-    }
-  })
-
-  const colors = [
-    'bg-indigo-300',
-    'bg-rose-500',
-    'bg-pink-500',
-    'bg-amber-400',
-    'bg-slate-400',
-    'bg-blue-400',
-  ] // TODO: кароче надо сделать все таки в сторе категорий структуру [id] = {name, color} - или пофиг или типа {id, name, color, icon}[]
-  // и уже исходя из этого строить цвета и проценты - потому что без этого компонент круга не сделаешь
-
-  const result = Object.values(c).map((amount) => ({
-    amount,
-    amountFormatted: formatPrice(amount),
-    color: colors.pop() || 'bg-gray-400',
-    percent: formatPercent((amount / total) * 100),
-  }))
-
-  result.sort((a, b) => b.amount - a.amount)
-
-  return result
-}
 
 function formatDateToGroupLabel(dateString: string) {
   const date = new Date(dateString)
