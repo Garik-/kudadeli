@@ -93,6 +93,9 @@ onMounted(() => {
         <RadioGroupOption v-for="category in store.categories" :key="category.id" :value="category.id"
           v-slot="{ checked }" class="flex items-center justify-between cursor-pointer px-2 py-3">
           <div class="flex items-center space-x-5">
+            <div class="w-12 h-12 rounded-full p-2" :class="category.color">
+              <component :is="category.icon" class="w-full h-full text-white" />
+            </div>
             <span class="text-base">{{ category.name }}</span>
           </div>
           <div class="w-6 h-6 flex items-center justify-center">

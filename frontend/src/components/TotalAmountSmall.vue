@@ -3,6 +3,7 @@ import type { Expense } from '@/models/expense'
 
 import { computed } from 'vue'
 import { useExpensesStore } from '@/stories/expensesStore'
+import { useCategoriesStore } from '@/stories/categoriesStore'
 import { formatPrice, formatPercent } from '@/utils/formatter'
 import { getTotalAmount } from '@/models/expense'
 
@@ -13,6 +14,7 @@ interface ExpenseByCategory {
   percent: string
 }
 
+const categoriesStore = useCategoriesStore()
 
 function transformExpensesByCategory(data: Expense[]): ExpenseByCategory[] {
   const c: Record<string, number> = {}
@@ -29,20 +31,10 @@ function transformExpensesByCategory(data: Expense[]): ExpenseByCategory[] {
     }
   })
 
-  const colors = [
-    'bg-indigo-300',
-    'bg-rose-500',
-    'bg-pink-500',
-    'bg-amber-400',
-    'bg-slate-400',
-    'bg-blue-400',
-  ] // TODO: кароче надо сделать все таки в сторе категорий структуру [id] = {name, color} - или пофиг или типа {id, name, color, icon}[]
-  // и уже исходя из этого строить цвета и проценты - потому что без этого компонент круга не сделаешь
-
-  const result = Object.values(c).map((amount) => ({
+  const result = Object.entries(c).map(([name, amount]) => ({
     amount,
     amountFormatted: formatPrice(amount),
-    color: colors.pop() || 'bg-gray-400',
+    color: categoriesStore.getColorByName(name),
     percent: formatPercent((amount / total) * 100),
   }))
 
