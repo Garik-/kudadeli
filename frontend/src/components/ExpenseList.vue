@@ -39,6 +39,10 @@ function selectItem(ID: string, category: string) {
 .shadow-item {
   box-shadow: rgba(0, 0, 0, 0.12) 0 6px 34px 0;
 }
+
+.bg-white-to-transparent {
+  background: linear-gradient(to bottom, white 80%, transparent);
+}
 </style>
 
 <template>
@@ -48,7 +52,7 @@ function selectItem(ID: string, category: string) {
   <template v-else>
     <div class="max-w-3xl mx-auto">
 
-      <header className="sticky top-0 py-8 px-4">
+      <header className="sticky top-0 py-8 px-4 bg-white-to-transparent">
         <!-- Filters -->
         <div class="flex flex-wrap gap-2 mb-6">
           <FilterButton label="Картой" v-model="isCart" @change="handleFilterChange" />
