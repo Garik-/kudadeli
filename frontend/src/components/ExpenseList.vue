@@ -1,29 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import FullScreenLoader from '@/components/FullScreenLoader.vue'
-import { useExpensesStore } from '@/stories/expensesStore'
-
-import { useCategoriesStore } from '@/stories/categoriesStore';
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router';
-import TotalAmountSmall from './TotalAmountSmall.vue';
-import BudgetAmountSmall from './BudgetAmountSmall.vue';
 
+import { useExpensesStore } from '@/stories/expensesStore'
+import { useCategoriesStore } from '@/stories/categoriesStore';
 
-import FilterButton from './FilterButton.vue';
+import FullScreenLoader from '@/components/FullScreenLoader.vue'
+import HeaderCards from './HeaderCards.vue';
 
 const store = useCategoriesStore()
 const router = useRouter()
 const expensesStore = useExpensesStore()
 
-const isCart = ref(false)
-
-function handleFilterChange() {
-  if (isCart.value) {
-    expensesStore.setFilter('paymentType', 'карта')
-  } else {
-    expensesStore.removeFilter('paymentType')
-  }
-}
 
 onMounted(() => {
   expensesStore.loadExpenses()
@@ -34,17 +22,6 @@ function selectItem(ID: string, category: string) {
 }
 </script>
 
-
-<style scoped>
-.shadow-item {
-  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 34px 0;
-}
-
-.bg-white-to-transparent {
-  background: linear-gradient(to bottom, white 80%, transparent);
-}
-</style>
-
 <template>
 
   <FullScreenLoader v-if="expensesStore.loading"></FullScreenLoader>
@@ -52,20 +29,9 @@ function selectItem(ID: string, category: string) {
   <template v-else>
     <div class="max-w-3xl mx-auto">
 
-      <header className="sticky top-0 py-8 px-4 bg-white-to-transparent">
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-2 mb-6">
-          <FilterButton label="Картой" v-model="isCart" @change="handleFilterChange" />
-        </div>
-        <div className="grid  grid-cols-2 gap-6 rounded-2xl">
-
-          <TotalAmountSmall />
-          <BudgetAmountSmall />
-        </div>
-      </header>
+      <HeaderCards />
 
       <main className="space-y-8 pb-4">
-
 
         <!-- Transactions by Date -->
         <div v-for="group in expensesStore.groupedTransactions" :key="group.date" class="space-y-2">
