@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useExpensesStore } from '@/stories/expensesStore'
 
+import ExpenseStatistic from './ExpenseStatistic.vue';
 import TotalAmountSmall from './TotalAmountSmall.vue';
 import BudgetAmountSmall from './BudgetAmountSmall.vue';
 import FilterButton from './FilterButton.vue';
@@ -9,6 +10,15 @@ import FilterButton from './FilterButton.vue';
 const expensesStore = useExpensesStore()
 
 const isCart = ref(false)
+const isOpen = ref(true)
+
+function handleClose() {
+  isOpen.value = false
+}
+
+function handleOpen() {
+  isOpen.value = true
+}
 
 function handleFilterChange() {
   if (isCart.value) {
@@ -24,8 +34,10 @@ function handleFilterChange() {
     <div class="flex flex-wrap gap-2 mb-6">
       <FilterButton label="Картой" v-model="isCart" @change="handleFilterChange" />
     </div>
-    <div className="grid  grid-cols-2 gap-6 rounded-2xl">
-      <TotalAmountSmall />
+
+    <ExpenseStatistic v-if="isOpen" :onClose="handleClose" />
+    <div className="grid grid-cols-2 gap-6" v-else>
+      <TotalAmountSmall @click="handleOpen" />
       <BudgetAmountSmall />
     </div>
   </header>

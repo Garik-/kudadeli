@@ -70,6 +70,10 @@ export const useCategoriesStore = defineStore('categories', () => {
     return categoriesMap.value[name]
   }
 
+  function getIconComponentByName(name: string) {
+    return getIconComponent(getIdByName(name))
+  }
+
   async function loadCategories() {
     loading.value = true
     error.value = null
@@ -106,5 +110,6 @@ export const useCategoriesStore = defineStore('categories', () => {
     loadCategories,
     getIdByName,
     getColorByName,
+    getIconComponentByName,
   }
 })
