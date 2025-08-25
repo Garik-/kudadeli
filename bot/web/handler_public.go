@@ -51,11 +51,14 @@ func publicHandler(fileServer http.Handler) http.HandlerFunc {
 				etagCache[r.URL.Path] = etag
 			}
 
-			if strings.Contains(r.URL.Path, "/assets/") {
+			switch {
+			case strings.Contains(r.URL.Path, "/assets/"):
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-			} else if r.URL.Path == "public/" || strings.HasSuffix(r.URL.Path, "index.html") {
+
+			case r.URL.Path == "public/" || strings.HasSuffix(r.URL.Path, "index.html"):
 				w.Header().Set("Cache-Control", "no-cache")
-			} else {
+
+			default:
 				w.Header().Set("Cache-Control", "public, max-age=3600")
 			}
 		}
