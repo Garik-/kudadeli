@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import ExpenseStatistic from './ExpenseStatistic.vue';
-import TotalAmountSmall from './TotalAmountSmall.vue';
-import BudgetAmountSmall from './BudgetAmountSmall.vue';
-import FiltersList from './FiltersList.vue';
+import ExpenseStatistic from './ExpenseStatistic.vue'
+import TotalAmountSmall from './TotalAmountSmall.vue'
+import BudgetAmountSmall from './BudgetAmountSmall.vue'
+import FiltersList from './FiltersList.vue'
 
 const isOpen = ref(false)
 
@@ -15,8 +15,6 @@ function handleClose() {
 function handleOpen() {
   isOpen.value = true
 }
-
-
 </script>
 <template>
   <header className="sticky top-0 py-8 px-4 bg-white-to-transparent">

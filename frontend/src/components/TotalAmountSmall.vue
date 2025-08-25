@@ -8,9 +8,12 @@ const expenseStore = useExpensesStore()
     <div className="text-gray-500 text-sm mb-4">Траты</div>
 
     <div className="flex h-3 w-full rounded-full overflow-hidden">
-      <div v-for="group in expenseStore.groupedByCategory" :key="group.amount" :class="group.color"
-        :style="{ width: group.percent }">
-      </div>
+      <div
+        v-for="group in expenseStore.groupedByCategory"
+        :key="group.amount"
+        :class="group.color"
+        :style="{ width: group.percent }"
+      ></div>
     </div>
   </div>
 </template>

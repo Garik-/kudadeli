@@ -8,11 +8,7 @@ import { useTmaStore } from '@/stories/tmaStore'
 import { HttpStatusCode } from 'axios'
 import { useExpensesStore } from '@/stories/expensesStore'
 
-
-import {
-  CheckCircleIcon,
-  ArrowLeftIcon,
-} from '@heroicons/vue/24/solid'
+import { CheckCircleIcon, ArrowLeftIcon } from '@heroicons/vue/24/solid'
 
 import { useCategoriesStore } from '@/stories/categoriesStore'
 
@@ -37,10 +33,9 @@ function parseIDs(id: string | string[]) {
 
   return {
     id: parts[0],
-    category: parseInt(parts[1])
+    category: parseInt(parts[1]),
   }
 }
-
 
 function goBack() {
   router.back()
@@ -70,9 +65,8 @@ onMounted(() => {
   id.value = params.id
   selected.value = params.category
 
-  console.log(params);
+  console.log(params)
 })
-
 </script>
 
 <template>
@@ -87,11 +81,15 @@ onMounted(() => {
         <h1 class="text-2xl font-bold mt-2">Изменение категории</h1>
       </header>
 
-
       <!-- Radio Group for Categories -->
       <RadioGroup v-model="selected" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <RadioGroupOption v-for="category in store.categories" :key="category.id" :value="category.id"
-          v-slot="{ checked }" class="flex items-center justify-between cursor-pointer px-2 py-3">
+        <RadioGroupOption
+          v-for="category in store.categories"
+          :key="category.id"
+          :value="category.id"
+          v-slot="{ checked }"
+          class="flex items-center justify-between cursor-pointer px-2 py-3"
+        >
           <div class="flex items-center space-x-5">
             <div class="w-12 h-12 rounded-full p-2" :class="category.color">
               <component :is="category.icon" class="w-full h-full text-white" />
@@ -105,11 +103,12 @@ onMounted(() => {
         </RadioGroupOption>
       </RadioGroup>
 
-
       <!-- Footer -->
       <footer class="sticky bottom-0 bg-gray-100 p-8 rounded-t-2xl">
-        <button @click="changeCategory"
-          class="w-full bg-yellow-400 text-black py-4 rounded-2xl action:bg-yellow-300 transition cursor-pointer">
+        <button
+          @click="changeCategory"
+          class="w-full bg-yellow-400 text-black py-4 rounded-2xl action:bg-yellow-300 transition cursor-pointer"
+        >
           Поменять категорию
         </button>
       </footer>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import { useCategoriesStore } from '@/stories/categoriesStore';
-import { RouterView } from 'vue-router';
-import { useTmaStore } from './stories/tmaStore';
+import { useCategoriesStore } from '@/stories/categoriesStore'
+import { RouterView } from 'vue-router'
+import { useTmaStore } from './stories/tmaStore'
 
 const categoriesStore = useCategoriesStore()
 const tmaStore = useTmaStore()
@@ -18,11 +18,9 @@ if (initialLoader) {
 }
 
 onMounted(() => {
-  tmaStore.init();
+  tmaStore.init()
   categoriesStore.loadCategories()
 })
-
-
 </script>
 
 <template>

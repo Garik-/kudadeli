@@ -4,9 +4,16 @@
     <div class="flex flex-wrap gap-2">
       <Listbox v-model="selectedMonth">
         <div class="relative">
-          <ListboxButton class="px-4 py-2 bg-blue-600 text-white rounded-md">{{ selectedMonth }}</ListboxButton>
+          <ListboxButton class="px-4 py-2 bg-blue-600 text-white rounded-md">{{
+            selectedMonth
+          }}</ListboxButton>
           <ListboxOptions class="absolute mt-1 bg-white border rounded-md w-32 z-10">
-            <ListboxOption v-for="month in months" :key="month" :value="month" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+            <ListboxOption
+              v-for="month in months"
+              :key="month"
+              :value="month"
+              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            >
               {{ month }}
             </ListboxOption>
           </ListboxOptions>
@@ -25,7 +32,12 @@
 
     <!-- Category Summary -->
     <div class="flex flex-wrap gap-2">
-      <div v-for="category in categories" :key="category.name" class="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium" :class="category.bg">
+      <div
+        v-for="category in categories"
+        :key="category.name"
+        class="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
+        :class="category.bg"
+      >
         <component :is="category.icon" class="w-4 h-4" />
         {{ category.name }} {{ category.amount }} ₽
       </div>
@@ -56,7 +68,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { BanknotesIcon, ShoppingBagIcon, FireIcon, TruckIcon, EllipsisHorizontalIcon } from '@heroicons/vue/24/solid'
+import {
+  BanknotesIcon,
+  ShoppingBagIcon,
+  FireIcon,
+  TruckIcon,
+  EllipsisHorizontalIcon,
+} from '@heroicons/vue/24/solid'
 
 const selectedMonth = ref('Июль')
 const months = ['Июль', 'Июнь', 'Май']
@@ -67,34 +85,87 @@ const categories = [
   { name: 'Рестораны', amount: 4323, icon: FireIcon, bg: 'bg-red-100 text-red-800' },
   { name: 'Фастфуд', amount: 3790, icon: FireIcon, bg: 'bg-yellow-100 text-yellow-800' },
   { name: 'Такси', amount: 2813, icon: TruckIcon, bg: 'bg-yellow-200 text-yellow-900' },
-  { name: 'Остальное', amount: 4363, icon: EllipsisHorizontalIcon, bg: 'bg-gray-100 text-gray-800' },
+  {
+    name: 'Остальное',
+    amount: 4363,
+    icon: EllipsisHorizontalIcon,
+    bg: 'bg-gray-100 text-gray-800',
+  },
 ]
 
 const groupedTransactions = [
   {
     date: 'Вчера',
     items: [
-      { id: 1, title: 'Пятёрочка', subtitle: 'Супермаркеты', amount: '1582,9', card: 'Дебетовая карта', logo: '/logos/pyaterochka.png' },
-      { id: 2, title: 'Пятёрочка', subtitle: 'Супермаркеты', amount: '59,99', card: 'Дебетовая карта', logo: '/logos/pyaterochka.png' },
-      { id: 3, title: 'Павел К.', subtitle: 'Переводы', amount: '120000', card: 'Black', logo: '/logos/person-yellow.png' },
-      { id: 4, title: 'Анфиса Р.', subtitle: 'Переводы', amount: '50000', card: 'Black', logo: '/logos/person-yellow.png' },
+      {
+        id: 1,
+        title: 'Пятёрочка',
+        subtitle: 'Супермаркеты',
+        amount: '1582,9',
+        card: 'Дебетовая карта',
+        logo: '/logos/pyaterochka.png',
+      },
+      {
+        id: 2,
+        title: 'Пятёрочка',
+        subtitle: 'Супермаркеты',
+        amount: '59,99',
+        card: 'Дебетовая карта',
+        logo: '/logos/pyaterochka.png',
+      },
+      {
+        id: 3,
+        title: 'Павел К.',
+        subtitle: 'Переводы',
+        amount: '120000',
+        card: 'Black',
+        logo: '/logos/person-yellow.png',
+      },
+      {
+        id: 4,
+        title: 'Анфиса Р.',
+        subtitle: 'Переводы',
+        amount: '50000',
+        card: 'Black',
+        logo: '/logos/person-yellow.png',
+      },
     ],
   },
   {
     date: '16 июля',
     items: [
-      { id: 5, title: 'Яндекс Такси', subtitle: 'Такси', amount: '220', card: 'Дебетовая карта', logo: '/logos/yandex-taxi.png' },
-      { id: 6, title: 'Яндекс Такси', subtitle: 'Такси', amount: '1389', card: 'Дебетовая карта', logo: '/logos/yandex-taxi.png' },
+      {
+        id: 5,
+        title: 'Яндекс Такси',
+        subtitle: 'Такси',
+        amount: '220',
+        card: 'Дебетовая карта',
+        logo: '/logos/yandex-taxi.png',
+      },
+      {
+        id: 6,
+        title: 'Яндекс Такси',
+        subtitle: 'Такси',
+        amount: '1389',
+        card: 'Дебетовая карта',
+        logo: '/logos/yandex-taxi.png',
+      },
     ],
   },
   {
     date: '15 июля',
     items: [
-      { id: 7, title: 'Яндекс Такси', subtitle: 'Такси', amount: '1204', card: '', logo: '/logos/yandex-taxi.png' },
+      {
+        id: 7,
+        title: 'Яндекс Такси',
+        subtitle: 'Такси',
+        amount: '1204',
+        card: '',
+        logo: '/logos/yandex-taxi.png',
+      },
     ],
   },
 ]
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import FilterButton from './FilterButton.vue';
+import FilterButton from './FilterButton.vue'
 import { useFiltersStore } from '@/stories/filtersStore'
-import { capitalizeFirstLetter } from '@/utils/formatter';
+import { capitalizeFirstLetter } from '@/utils/formatter'
 import { ref, computed } from 'vue'
-import type { Filter } from '@/stories/filtersStore';
+import type { Filter } from '@/stories/filtersStore'
 const filtersStore = useFiltersStore()
 const isCart = ref(false)
 const isCategory = ref(true)
-
 
 function handleFilterCard() {
   if (isCart.value) {
@@ -24,7 +23,7 @@ function createButton(filter: Filter) {
     return undefined
   }
   return {
-    label: capitalizeFirstLetter(filter.category!)
+    label: capitalizeFirstLetter(filter.category!),
   }
 }
 
@@ -36,8 +35,11 @@ function removeCategoryFilter() {
 <template>
   <div class="flex flex-wrap gap-2 mb-6">
     <FilterButton label="Картой" v-model="isCart" @change="handleFilterCard" />
-    <FilterButton v-if="categoryButton" :label="categoryButton.label" v-model="isCategory"
-      @click="removeCategoryFilter" />
+    <FilterButton
+      v-if="categoryButton"
+      :label="categoryButton.label"
+      v-model="isCategory"
+      @click="removeCategoryFilter"
+    />
   </div>
-
 </template>
