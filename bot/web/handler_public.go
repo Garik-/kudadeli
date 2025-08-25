@@ -7,6 +7,7 @@ import (
 	iofs "io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -30,9 +31,11 @@ func publicHandler(fileServer http.Handler) http.HandlerFunc {
 			return
 		}
 
+		slog.DebugContext(r.Context(), r.URL.Path)
+
 		r.URL.Path = "public" + r.URL.Path
 
-		if fileExists(publicFiles, r.URL.Path) {
+		if r.URL.Path == "public/" || fileExists(publicFiles, r.URL.Path) {
 			if etag, ok := etagCache[r.URL.Path]; ok {
 				w.Header().Set("ETag", etag)
 
@@ -48,7 +51,13 @@ func publicHandler(fileServer http.Handler) http.HandlerFunc {
 				etagCache[r.URL.Path] = etag
 			}
 
-			w.Header().Set("Cache-Control", "public, max-age=3600")
+			if strings.Contains(r.URL.Path, "/assets/") {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else if r.URL.Path == "public/" || strings.HasSuffix(r.URL.Path, "index.html") {
+				w.Header().Set("Cache-Control", "no-cache")
+			} else {
+				w.Header().Set("Cache-Control", "public, max-age=3600")
+			}
 		}
 
 		fileServer.ServeHTTP(w, r)
