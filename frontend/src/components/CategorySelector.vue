@@ -5,7 +5,6 @@ import FullScreenLoader from '@/components/FullScreenLoader.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { updateExpenseCategory } from '@/services/api'
 import { useTmaStore } from '@/stories/tmaStore'
-import { HttpStatusCode } from 'axios'
 import { useExpensesStore } from '@/stories/expensesStore'
 
 import { CheckCircleIcon, ArrowLeftIcon } from '@heroicons/vue/24/solid'
@@ -46,7 +45,7 @@ async function changeCategory() {
     const code = await updateExpenseCategory(id.value, selected.value, tmaStore.token as string)
     console.log('updateExpenseCategory', code, tmaStore.token)
 
-    if (code === HttpStatusCode.NoContent) {
+    if (code === 204) {
       expensesStore.needUpdate()
     }
   } catch (e: unknown) {

@@ -1,39 +1,39 @@
-import axios from 'axios'
 import type { Expense } from '@/models/expense'
 import type { Category } from '@/models/category'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
-export async function fetchExpenses() {
-  const response = await axios.get<Expense[]>(`${API_BASE_URL}/v1/expenses`)
-  return response.data
+export async function fetchExpenses(): Promise<Expense[]> {
+  const response = await fetch(`${API_BASE_URL}/v1/expenses`)
+  return response.json()
 }
 
-export async function fetchCategories() {
-  const response = await axios.get<Category[]>(`${API_BASE_URL}/v1/categories`)
-  return response.data
+export async function fetchCategories(): Promise<Category[]> {
+  const response = await fetch(`${API_BASE_URL}/v1/categories`)
+  return response.json()
 }
 
 function authorizationHeader(token?: string) {
-  if (token)
+  if (token) {
     return {
       Authorization: `tma ${token}`,
     }
-
-  return {}
+  }
 }
 
 export async function updateExpenseCategory(expenseId: string, category: number, token?: string) {
-  const response = await axios.put(
-    `${API_BASE_URL}/v1/expenses/${expenseId}/category`,
-    {
-      category,
+  const response = await fetch(`${API_BASE_URL}/v1/expenses/${expenseId}/category`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authorizationHeader(token),
     },
-    {
-      validateStatus: (status) => status === 204 || status === 403,
-      headers: authorizationHeader(token),
-    },
-  )
+    body: JSON.stringify({ category }),
+  })
 
-  return response.status
+  if (response.status === 204 || response.status === 403) {
+    return response.status
+  }
+
+  throw new Error(`Unexpected response status: ${response.status}`)
 }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 
-import ExpenseStatistic from './ExpenseStatistic.vue'
 import TotalAmountSmall from './TotalAmountSmall.vue'
 import BudgetAmountSmall from './BudgetAmountSmall.vue'
 import FiltersList from './FiltersList.vue'
@@ -15,13 +14,18 @@ function handleClose() {
 function handleOpen() {
   isOpen.value = true
 }
+
+const ExpenseStatistic = defineAsyncComponent(() => import('./ExpenseStatistic.vue'))
 </script>
 <template>
   <header className="sticky top-0 py-8 px-4 bg-white-to-transparent">
     <!-- Filters -->
     <FiltersList />
 
-    <ExpenseStatistic v-if="isOpen" :onClose="handleClose" />
+    <template v-if="isOpen">
+      <ExpenseStatistic :onClose="handleClose" />
+    </template>
+
     <div className="grid grid-cols-2 gap-6" v-else>
       <TotalAmountSmall @click="handleOpen" />
       <BudgetAmountSmall />
