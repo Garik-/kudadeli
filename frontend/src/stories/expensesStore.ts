@@ -8,6 +8,7 @@ import { formatPrice, capitalizeFirstLetter } from '@/utils/formatter'
 import { defineStore } from 'pinia'
 import { useCategoriesStore } from './categoriesStore'
 import { formatPercent } from '@/utils/formatter'
+import { useFiltersStore } from './filtersStore'
 
 import type { FunctionalComponent } from 'vue'
 
@@ -30,6 +31,7 @@ export interface ExpenseByCategory {
   color: string
   percent: string
   name: string
+  title: string
   icon?: FunctionalComponent
 }
 
@@ -39,13 +41,13 @@ export const useExpensesStore = defineStore('expenses', () => {
   const update = ref(true)
 
   const expenses = ref<Expense[]>([])
-  const filter = ref<Partial<Expense>>({})
 
   const categoriesStore = useCategoriesStore()
+  const filtersStore = useFiltersStore()
 
   const filteredExpenses = computed(() => {
     return expenses.value.filter((expense) => {
-      return Object.entries(filter.value).every(([key, value]) => {
+      return Object.entries(filtersStore.filter).every(([key, value]) => {
         if (!value) return true // если фильтр по этому полю не задан
         return String(expense[key as keyof Expense]) === String(value)
       })
@@ -63,22 +65,6 @@ export const useExpensesStore = defineStore('expenses', () => {
 
   const loading = ref(false)
   const error = ref<string | null>(null)
-
-  function setFilter<K extends keyof Expense>(key: K, value: Expense[K] | null) {
-    if (value == null || value === '') {
-      delete filter.value[key]
-    } else {
-      filter.value[key] = value
-    }
-  }
-
-  function removeFilter<K extends keyof Expense>(key: K) {
-    delete filter.value[key]
-  }
-
-  function clearFilter() {
-    filter.value = {}
-  }
 
   async function loadExpenses() {
     if (!update.value) {
@@ -126,7 +112,8 @@ export const useExpensesStore = defineStore('expenses', () => {
       amount,
       amountFormatted: formatPrice(amount),
       color: categoriesStore.getColorByName(name),
-      name: capitalizeFirstLetter(name),
+      name,
+      title: capitalizeFirstLetter(name),
       icon: categoriesStore.getIconComponentByName(name),
       percent: formatPercent((amount / total) * 100),
     }))
@@ -206,9 +193,6 @@ export const useExpensesStore = defineStore('expenses', () => {
     loadExpenses,
     needUpdate,
     filteredExpenses,
-    setFilter,
-    removeFilter,
-    clearFilter,
     groupedByCategory,
     totalAmount,
   }

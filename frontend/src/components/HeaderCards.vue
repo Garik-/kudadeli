@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useExpensesStore } from '@/stories/expensesStore'
 
 import ExpenseStatistic from './ExpenseStatistic.vue';
 import TotalAmountSmall from './TotalAmountSmall.vue';
 import BudgetAmountSmall from './BudgetAmountSmall.vue';
-import FilterButton from './FilterButton.vue';
+import FiltersList from './FiltersList.vue';
 
-const expensesStore = useExpensesStore()
-
-const isCart = ref(false)
-const isOpen = ref(true)
+const isOpen = ref(false)
 
 function handleClose() {
   isOpen.value = false
@@ -20,20 +16,12 @@ function handleOpen() {
   isOpen.value = true
 }
 
-function handleFilterChange() {
-  if (isCart.value) {
-    expensesStore.setFilter('paymentType', 'карта')
-  } else {
-    expensesStore.removeFilter('paymentType')
-  }
-}
+
 </script>
 <template>
   <header className="sticky top-0 py-8 px-4 bg-white-to-transparent">
     <!-- Filters -->
-    <div class="flex flex-wrap gap-2 mb-6">
-      <FilterButton label="Картой" v-model="isCart" @change="handleFilterChange" />
-    </div>
+    <FiltersList />
 
     <ExpenseStatistic v-if="isOpen" :onClose="handleClose" />
     <div className="grid grid-cols-2 gap-6" v-else>
