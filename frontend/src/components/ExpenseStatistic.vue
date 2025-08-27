@@ -155,13 +155,23 @@ const series: ComputedRef<ApexAxisChartSeries | ApexNonAxisChartSeries> = comput
     </div>
   </div>
   <div className="pl-12 pr-12">
-    <VueApexCharts width="100%" type="donut" :options="chartOptions" :series="series"></VueApexCharts>
+    <VueApexCharts
+      width="100%"
+      type="donut"
+      :options="chartOptions"
+      :series="series"
+    ></VueApexCharts>
   </div>
   <div class="flex flex-wrap gap-2 mb-6">
-    <div v-for="category in expensesStore.groupedByCategory" :key="category.amount" :class="[
-      'flex items-center gap-1 rounded-full p-1 cursor-pointer',
-      getLabelColor(category.color, 100),
-    ]" @click="setCategoryFilter(category.name)">
+    <div
+      v-for="category in expensesStore.groupedByCategory"
+      :key="category.amount"
+      :class="[
+        'flex items-center gap-1 rounded-full p-1 cursor-pointer',
+        getLabelColor(category.color, 100),
+      ]"
+      @click="setCategoryFilter(category.name)"
+    >
       <div class="w-8 h-8 rounded-full p-2" :class="category.color">
         <component :is="category.icon" class="w-full h-full text-white" />
       </div>

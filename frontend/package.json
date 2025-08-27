@@ -11,6 +11,8 @@
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
+    "prepush": "run-s lint format",
+    "push": "git push origin main",
     "tailwind:init": "tailwindcss init -p"
   },
   "devDependencies": {
