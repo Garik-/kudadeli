@@ -58,11 +58,11 @@ function addGlowEffect() {
 
     cssRules += `
       .apexcharts-pie-series path[j="${j}"] {
-        filter: drop-shadow(0 6px 12px ${makeOklchTransparent(fillColor, 0.35)});
+        filter: drop-shadow(0 6px 6px ${makeOklchTransparent(fillColor, 0.35)});
       }
 
      .apexcharts-pie-series path[j="${j}"]:hover {
-        filter: drop-shadow(0 6px 12px ${makeOklchTransparent(fillColor, 0.5)}) brightness(0.96);
+        filter: drop-shadow(0 6px 6px ${makeOklchTransparent(fillColor, 0.5)}) brightness(0.96);
       }
     `
   })
@@ -115,7 +115,7 @@ const chartOptions: ComputedRef<ApexOptions> = computed(() => {
           background: 'transparent',
         },
         dataLabels: {
-          offset: 45,
+          offset: 30,
           minAngleToShowLabel: 15,
         },
         customScale: 1,
@@ -154,24 +154,14 @@ const series: ComputedRef<ApexAxisChartSeries | ApexNonAxisChartSeries> = comput
       <XMarkIcon class="w-full h-full text-gray-500" />
     </div>
   </div>
-  <div>
-    <VueApexCharts
-      width="100%"
-      type="donut"
-      :options="chartOptions"
-      :series="series"
-    ></VueApexCharts>
+  <div className="pl-12 pr-12">
+    <VueApexCharts width="100%" type="donut" :options="chartOptions" :series="series"></VueApexCharts>
   </div>
   <div class="flex flex-wrap gap-2 mb-6">
-    <div
-      v-for="category in expensesStore.groupedByCategory"
-      :key="category.amount"
-      :class="[
-        'flex items-center gap-1 rounded-full p-1 cursor-pointer',
-        getLabelColor(category.color, 100),
-      ]"
-      @click="setCategoryFilter(category.name)"
-    >
+    <div v-for="category in expensesStore.groupedByCategory" :key="category.amount" :class="[
+      'flex items-center gap-1 rounded-full p-1 cursor-pointer',
+      getLabelColor(category.color, 100),
+    ]" @click="setCategoryFilter(category.name)">
       <div class="w-8 h-8 rounded-full p-2" :class="category.color">
         <component :is="category.icon" class="w-full h-full text-white" />
       </div>
