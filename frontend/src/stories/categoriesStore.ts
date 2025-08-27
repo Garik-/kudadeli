@@ -35,6 +35,15 @@ export const useCategoriesStore = defineStore('categories', () => {
     6: 'bg-blue-400',
   }
 
+  const colorsHex: Record<number, string> = {
+    'bg-indigo-300': 'oklch(78.5% 0.115 274.713)',
+    'bg-rose-500': 'oklch(64.5% 0.246 16.439)',
+    'bg-pink-500': 'oklch(65.6% 0.241 354.308)',
+    'bg-amber-400': 'oklch(82.8% 0.189 84.429)',
+    'bg-slate-400': 'oklch(70.4% 0.04 256.788)',
+    'bg-blue-400': 'oklch(70.7% 0.165 254.624)',
+  }
+
   const icons: Record<number, FunctionalComponent> = {
     1: ArchiveBoxIcon,
     2: CurrencyDollarIcon,
@@ -74,6 +83,13 @@ export const useCategoriesStore = defineStore('categories', () => {
     return getIconComponent(getIdByName(name))
   }
 
+  function getHexColor(name: string) {
+    if (!(name in colorsHex)) {
+      return 'oklch(70.7% 0.022 261.325)'
+    }
+    return colorsHex[name]
+  }
+
   async function loadCategories() {
     loading.value = true
     error.value = null
@@ -111,5 +127,6 @@ export const useCategoriesStore = defineStore('categories', () => {
     getIdByName,
     getColorByName,
     getIconComponentByName,
+    getHexColor,
   }
 })

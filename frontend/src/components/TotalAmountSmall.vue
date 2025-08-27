@@ -12,7 +12,7 @@ const expenseStore = useExpensesStore()
         v-for="group in expenseStore.groupedByCategory"
         :key="group.amount"
         :class="group.color"
-        :style="{ width: group.percent }"
+        :style="{ width: group.width }"
       ></div>
     </div>
   </div>

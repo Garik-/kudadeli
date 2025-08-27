@@ -29,7 +29,8 @@ export interface ExpenseByCategory {
   amount: number
   amountFormatted: string
   color: string
-  percent: string
+  percent: number
+  width: string
   name: string
   title: string
   icon?: FunctionalComponent
@@ -115,7 +116,8 @@ export const useExpensesStore = defineStore('expenses', () => {
       name,
       title: capitalizeFirstLetter(name),
       icon: categoriesStore.getIconComponentByName(name),
-      percent: formatPercent((amount / total) * 100),
+      percent: (amount / total) * 100,
+      width: formatPercent((amount / total) * 100),
     }))
 
     result.sort((a, b) => b.amount - a.amount)

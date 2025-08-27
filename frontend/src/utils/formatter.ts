@@ -7,8 +7,9 @@ export function formatPrice(amount: number): string {
   })
 }
 
-export function formatPercent(n: number): string {
-  return n.toFixed(2) + '%'
+export function formatPercent(n: number, fixed = 2): string {
+  const rounded = Number(n.toFixed(fixed))
+  return (rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(fixed)) + '%'
 }
 
 export function capitalizeFirstLetter(str: string) {
