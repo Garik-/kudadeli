@@ -83,6 +83,7 @@ const chartOptions: ComputedRef<ApexOptions> = computed(() => {
       id: 'vuechart-example',
       events: {
         mounted: addGlowEffect,
+        updated: addGlowEffect,
       },
       sparkline: {
         enabled: false,
@@ -115,7 +116,7 @@ const chartOptions: ComputedRef<ApexOptions> = computed(() => {
         },
         dataLabels: {
           offset: 45,
-          minAngleToShowLabel: 20,
+          minAngleToShowLabel: 15,
         },
         customScale: 1,
         expandOnClick: false,
