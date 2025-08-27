@@ -111,11 +111,11 @@ const chartOptions: ComputedRef<ApexOptions> = computed(() => {
     plotOptions: {
       pie: {
         donut: {
-          size: '80%',
+          size: '70%',
           background: 'transparent',
         },
         dataLabels: {
-          offset: 30,
+          offset: 36,
           minAngleToShowLabel: 15,
         },
         customScale: 1,
